@@ -16,7 +16,8 @@ async function init() {
   document.getElementById('heroPrice').textContent = config.priceLabel;
   document.getElementById('payBtnPrice').textContent = config.priceLabel;
   document.getElementById('heroMaxMb').textContent = config.maxFileMB;
-  document.getElementById('heroMaxMin').textContent = Math.round(config.maxDurationSeconds / 60);
+  const maxMinEl = document.getElementById('heroMaxMin');
+  if (maxMinEl) maxMinEl.textContent = Math.round(config.maxDurationSeconds / 60);
 
   // Check if returning from Stripe
   const params = new URLSearchParams(window.location.search);
