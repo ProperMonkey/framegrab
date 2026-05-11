@@ -13,6 +13,31 @@ const ffmpegPath = require('ffmpeg-static');
 const { v4: uuidv4 } = require('uuid');
 const Stripe = require('stripe');
 
+// ── Concurrency limiter ──────────────────────────────────────────────────
+const MAX_CONCURRENT_JOBS = parseInt(process.env.MAX_CONCURRENT_JOBS || '2', 10);
+let activeJobs = 0;
+const jobQueue = [];
+
+function acquireSlot() {
+  return new Promise(resolve => {
+    if (activeJobs < MAX_CONCURRENT_JOBS) {
+      activeJobs++;
+      resolve();
+    } else {
+      jobQueue.push(resolve);
+    }
+  });
+}
+
+function releaseSlot() {
+  if (jobQueue.length > 0) {
+    const next = jobQueue.shift();
+    next();
+  } else {
+    activeJobs--;
+  }
+}
+
 // ── Config ──────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 const BASE_URL = (process.env.BASE_URL || `http://localhost:${PORT}`).replace(/\/$/, '');
@@ -218,7 +243,13 @@ app.post('/api/extract', (req, res) => {
       const outputDir = path.join(FRAMES_DIR, jobId);
       fs.mkdirSync(outputDir, { recursive: true });
 
-      const frameCount = await extractFrames(videoPath, outputDir, format, intervalNum, qualityNum);
+      await acquireSlot();
+      let frameCount;
+      try {
+        frameCount = await extractFrames(videoPath, outputDir, format, intervalNum, qualityNum);
+      } finally {
+        releaseSlot();
+      }
 
       res.setHeader('Content-Type', 'application/zip');
       res.setHeader('Content-Disposition', `attachment; filename="framegrab_${jobId.slice(0, 8)}.zip"`);
