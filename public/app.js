@@ -12,6 +12,15 @@ async function init() {
     config = await res.json();
   } catch (_) {}
 
+  // Maintenance mode — disable pay button and show message
+  if (config.maintenanceMode) {
+    const btn = document.getElementById('payBtn');
+    btn.disabled = true;
+    btn.textContent = 'Temporarily unavailable — please check back shortly';
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'not-allowed';
+  }
+
   // Populate UI text
   document.getElementById('heroPrice').textContent = config.priceLabel;
   document.getElementById('payBtnPrice').textContent = config.priceLabel;

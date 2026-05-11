@@ -12,6 +12,7 @@ const archiver = require('archiver');
 const ffmpegPath = require('ffmpeg-static');
 const { v4: uuidv4 } = require('uuid');
 const Stripe = require('stripe');
+const nodemailer = require('nodemailer');
 
 // ── Concurrency limiter ──────────────────────────────────────────────────
 const MAX_CONCURRENT_JOBS = parseInt(process.env.MAX_CONCURRENT_JOBS || '2', 10);
@@ -48,6 +49,29 @@ const MAX_DURATION_SECONDS = parseInt(process.env.MAX_DURATION_SECONDS || '300',
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
+const MAINTENANCE_MODE = process.env.MAINTENANCE_MODE === 'true';
+const ALERT_EMAIL = process.env.ALERT_EMAIL || 'TechnicianFilms@gmail.com';
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
+
+// ── Email alerter ────────────────────────────────────────────────────────
+const mailer = GMAIL_APP_PASSWORD ? nodemailer.createTransport({
+  service: 'gmail',
+  auth: { user: ALERT_EMAIL, pass: GMAIL_APP_PASSWORD }
+}) : null;
+
+let lastAlertSent = 0;
+function sendAlert(subject, message) {
+  if (!mailer) return;
+  const now = Date.now();
+  if (now - lastAlertSent < 15 * 60 * 1000) return; // max one alert per 15 min
+  lastAlertSent = now;
+  mailer.sendMail({
+    from: ALERT_EMAIL,
+    to: ALERT_EMAIL,
+    subject: `[FrameGrab] ${subject}`,
+    text: message
+  }).catch(err => console.error('Alert email failed:', err.message));
+}
 
 if (!STRIPE_SECRET_KEY) {
   console.warn('\n⚠  STRIPE_SECRET_KEY not set — payment flow will be disabled (dev mode)\n');
@@ -133,12 +157,16 @@ app.get('/api/config', (req, res) => {
     priceLabel: PRICE_LABEL,
     maxFileMB: MAX_FILE_MB,
     maxDurationSeconds: MAX_DURATION_SECONDS,
-    devMode: !STRIPE_SECRET_KEY
+    devMode: !STRIPE_SECRET_KEY,
+    maintenanceMode: MAINTENANCE_MODE
   });
 });
 
 // Create Stripe Checkout session → return URL to redirect to
 app.post('/api/checkout', async (req, res) => {
+  if (MAINTENANCE_MODE) {
+    return res.status(503).json({ error: 'FrameGrab is temporarily unavailable. Please try again shortly.' });
+  }
   if (!stripe) {
     // Dev mode: skip payment, issue a fake session
     const fakeId = 'dev_' + uuidv4();
@@ -246,6 +274,7 @@ app.post('/api/extract', (req, res) => {
       const queuePosition = jobQueue.length;
       if (queuePosition > 0) {
         console.log(`Job queued — position ${queuePosition}`);
+        sendAlert('High traffic — jobs queuing', `There are currently ${queuePosition} jobs waiting in the queue. Consider enabling MAINTENANCE_MODE in Railway Variables if the site becomes unstable.`);
       }
 
       await acquireSlot();
