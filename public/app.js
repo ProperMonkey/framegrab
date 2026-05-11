@@ -1,6 +1,6 @@
 /* FrameGrab — frontend */
 
-let config = { priceLabel: '$2.00', maxFileMB: 500, maxDurationSeconds: 300, devMode: false };
+let config = { priceLabel: '$1.99', maxFileMB: 500, maxDurationSeconds: 300, devMode: false };
 let sessionId = null;
 let selectedFile = null;
 let selectedFormat = 'jpg';
