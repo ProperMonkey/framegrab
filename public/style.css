@@ -62,7 +62,7 @@ main { width: 100%; max-width: 760px; padding: 0 24px 80px; }
   margin-bottom: 18px;
 }
 .hero-headline {
-  font-size: clamp(36px, 6vw, 56px);
+  font-size: clamp(30px, 5vw, 46px);
   font-weight: 800;
   line-height: 1.08;
   letter-spacing: -0.03em;
