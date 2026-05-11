@@ -183,9 +183,6 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
 
     showView('done');
 
-    // Auto-trigger download
-    link.click();
-
     // Clean up object URL after a delay
     setTimeout(() => URL.revokeObjectURL(url), 60000);
 
