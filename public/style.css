@@ -25,7 +25,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 24px 32px 8px;
+  padding: 24px 24px 8px;
   max-width: 760px;
   margin: 0 auto;
   width: 100%;
