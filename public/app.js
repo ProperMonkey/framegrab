@@ -146,6 +146,12 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
   formData.append('interval', '15');
 
   try {
+    // Switch message after upload completes to indicate queued state
+    const uploadTimeout = setTimeout(() => {
+      setProcessing('Your video is queued — you\'re next in line…', 30);
+      setTimeout(() => setProcessing('Processing your frames…', 40), 8000);
+    }, 4000);
+
     // Fake progress during upload/processing
     const progressTick = fakeProgress(15, 85, 40000);
 
@@ -155,6 +161,7 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
     });
 
     clearInterval(progressTick);
+    clearTimeout(uploadTimeout);
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: 'Processing failed' }));

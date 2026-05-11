@@ -243,6 +243,11 @@ app.post('/api/extract', (req, res) => {
       const outputDir = path.join(FRAMES_DIR, jobId);
       fs.mkdirSync(outputDir, { recursive: true });
 
+      const queuePosition = jobQueue.length;
+      if (queuePosition > 0) {
+        console.log(`Job queued — position ${queuePosition}`);
+      }
+
       await acquireSlot();
       let frameCount;
       try {
