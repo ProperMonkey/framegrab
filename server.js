@@ -1,4 +1,7 @@
-require('dotenv').config();
+// dotenv only runs locally; Railway injects env vars natively
+if (process.env.NODE_ENV !== 'production') {
+  try { require('dotenv').config(); } catch (_) {}
+}
 
 const express = require('express');
 const multer = require('multer');
