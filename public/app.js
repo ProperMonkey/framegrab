@@ -45,21 +45,27 @@ async function verifyAndShowUpload(sid) {
   showView('processing');
   setProcessing('Verifying payment…', 20);
 
-  try {
-    const res = await fetch(`/api/session/${encodeURIComponent(sid)}`);
-    const data = await res.json();
+  // Retry up to 5 times with 2 second delays to handle webhook timing
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    try {
+      const res = await fetch(`/api/session/${encodeURIComponent(sid)}`);
+      const data = await res.json();
 
-    if (data.valid) {
-      sessionId = sid;
-      showView('upload');
-    } else {
-      showView('landing');
-      showToast('Payment could not be verified. If you were charged, please contact support.');
+      if (data.valid) {
+        sessionId = sid;
+        showView('upload');
+        return;
+      }
+    } catch (_) {}
+
+    if (attempt < 5) {
+      setProcessing(`Verifying payment… (${attempt}/5)`, 20 + attempt * 10);
+      await new Promise(r => setTimeout(r, 2000));
     }
-  } catch (_) {
-    showView('landing');
-    showToast('Connection error. Please try again.');
   }
+
+  showView('landing');
+  showToast('Payment could not be verified. If you were charged, please contact support at TechnicianFilms@gmail.com');
 }
 
 // ── Payment ───────────────────────────────────────────────────────────────
