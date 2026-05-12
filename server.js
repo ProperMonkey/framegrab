@@ -82,6 +82,27 @@ async function redisMarkUsed(id) {
   return true;
 }
 
+// Restore a session back to 'paid' if processing failed after markUsed
+async function restoreSession(id) {
+  if (redis) {
+    await redis.del(`session:${id}:used`);
+    const cur = await redisGetSession(id);
+    if (cur) {
+      const { usedAt, ...rest } = cur;
+      await redis.set(`session:${id}`, JSON.stringify({ ...rest, status: 'paid' }), {
+        ex: SESSION_TTL_SECONDS
+      });
+    }
+    return;
+  }
+  const s = _loadFile();
+  if (s[id]) {
+    s[id].status = 'paid';
+    delete s[id].usedAt;
+    _saveFile(s);
+  }
+}
+
 // ── Concurrency limiter ──────────────────────────────────────────────────
 const MAX_CONCURRENT_JOBS = parseInt(process.env.MAX_CONCURRENT_JOBS || '8', 10);
 let activeJobs = 0;
@@ -435,17 +456,29 @@ app.post('/api/extract', (req, res) => {
 
       // Stream ZIP directly to user (memory-efficient)
       const archive = archiver('zip', { zlib: { level: 1 } });
+      let streamComplete = false;
       archive.pipe(res);
       archive.directory(outputDir, false);
       archive.on('error', err => console.error('Archive error:', err));
       await archive.finalize();
-      res.on('finish', () => cleanup(videoPath, outputDir));
-      res.on('close', () => cleanup(videoPath, outputDir));
+      res.on('finish', () => { streamComplete = true; cleanup(videoPath, outputDir); });
+      res.on('close', async () => {
+        cleanup(videoPath, outputDir);
+        // If connection dropped before stream finished, restore the session
+        if (!streamComplete) {
+          console.log(`Connection closed early — restoring session ${sessionId}`);
+          try { await restoreSession(sessionId); } catch (e) { console.error('Restore failed:', e.message); }
+        }
+      });
 
     } catch (err) {
       console.error('Extraction error:', err);
       cleanup(videoPath);
-      res.status(500).json({ error: 'Processing failed — your session has been restored. Please contact support.' });
+      // Restore the session so the user can try again
+      try { await restoreSession(sessionId); } catch (e) { console.error('Restore failed:', e.message); }
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Processing failed — your session has been restored. You can upload again.' });
+      }
     }
   });
 });
