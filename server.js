@@ -172,7 +172,28 @@ if (!STRIPE_SECRET_KEY) {
   console.warn('\n⚠  STRIPE_SECRET_KEY not set — payment flow will be disabled (dev mode)\n');
 }
 
-const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
+const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY, {
+  maxNetworkRetries: 3,  // SDK auto-retry on network errors
+  timeout: 20000          // 20s timeout
+}) : null;
+
+// Retry helper for Stripe rate-limit errors (HTTP 429)
+async function withStripeRetry(fn, maxAttempts = 5) {
+  let lastErr;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      const isRateLimit = err.statusCode === 429 || /rate limit/i.test(err.message || '');
+      if (!isRateLimit || attempt === maxAttempts) throw err;
+      // Exponential backoff with jitter: 200ms, 400ms, 800ms, 1600ms
+      const wait = 200 * Math.pow(2, attempt - 1) + Math.random() * 200;
+      await new Promise(r => setTimeout(r, wait));
+    }
+  }
+  throw lastErr;
+}
 
 // ── Directories ─────────────────────────────────────────────────────────
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
@@ -285,7 +306,7 @@ app.post('/api/checkout', async (req, res) => {
   }
 
   try {
-    const session = await stripe.checkout.sessions.create({
+    const session = await withStripeRetry(() => stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: [{
         price_data: {
@@ -301,13 +322,18 @@ app.post('/api/checkout', async (req, res) => {
       success_url: `${BASE_URL}/?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${BASE_URL}/`,
       expires_at: Math.floor(Date.now() / 1000) + 1800 // 30 min
-    });
+    }));
 
     await insertSession(session.id, 'pending');
     res.json({ url: session.url });
   } catch (err) {
     console.error('Stripe error:', err.message);
-    res.status(500).json({ error: 'Could not create checkout session' });
+    const isRateLimit = err.statusCode === 429 || /rate limit/i.test(err.message || '');
+    res.status(isRateLimit ? 503 : 500).json({
+      error: isRateLimit
+        ? 'Lots of traffic right now — please try again in a few seconds.'
+        : 'Could not create checkout session'
+    });
   }
 });
 
@@ -323,7 +349,7 @@ app.get('/api/session/:id', async (req, res) => {
   // If not in DB yet, check Stripe directly (webhook may not have fired yet)
   if (stripe && id.startsWith('cs_')) {
     try {
-      const session = await stripe.checkout.sessions.retrieve(id);
+      const session = await withStripeRetry(() => stripe.checkout.sessions.retrieve(id));
       console.log(`Stripe session check: ${id} → payment_status=${session.payment_status}`);
       if (session.payment_status === 'paid') {
         await insertSession(id, 'pending');
