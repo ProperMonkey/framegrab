@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — FrameGrab</title>
+  <meta name="description" content="FrameGrab Privacy Policy" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .legal-page { max-width: 760px; padding: 40px 24px 80px; }
+    .legal-page h1 { font-size: 36px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+    .legal-page .updated { color: var(--muted); font-size: 13px; margin-bottom: 32px; }
+    .legal-page h2 { font-size: 20px; font-weight: 700; margin: 32px 0 12px; color: #fff; }
+    .legal-page p, .legal-page li { font-size: 15px; line-height: 1.7; color: #b0b0b0; margin-bottom: 12px; }
+    .legal-page ul { padding-left: 22px; margin-bottom: 12px; }
+    .legal-page a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+    .legal-page strong { color: var(--text); }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; margin-bottom: 24px; text-decoration: none; }
+    .back-link:hover { color: var(--text); }
+    .legal-page table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 14px; }
+    .legal-page th, .legal-page td { border: 1px solid var(--border); padding: 10px 14px; text-align: left; }
+    .legal-page th { color: var(--text); font-weight: 600; background: var(--surface); }
+    .legal-page td { color: #b0b0b0; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <nav class="nav">
+      <a href="/" style="text-decoration:none">
+        <div class="nav-logo">
+          <svg width="22" height="18" viewBox="0 0 22 18" fill="none" stroke="#e8ff47" stroke-width="2" stroke-linecap="round" style="margin-right:8px;vertical-align:middle;">
+            <path d="M1 6V1h5"/><path d="M21 6V1h-5"/><path d="M1 12v5h5"/><path d="M21 12v5h-5"/>
+          </svg>FRAMEGRAB
+        </div>
+      </a>
+    </nav>
+    <main class="legal-page">
+      <a href="/" class="back-link">← Back to FrameGrab</a>
+      <h1>Privacy Policy</h1>
+      <p class="updated">Last updated: May 12, 2026</p>
+
+      <p>FrameGrab ("Service", "we", "us") is operated by Technician Films. This Privacy Policy explains what data we collect, how we use it, and your rights.</p>
+
+      <h2>1. Our Privacy Principles</h2>
+      <p>FrameGrab is designed to be a privacy-first service:</p>
+      <ul>
+        <li><strong>We do not require accounts.</strong> No email, no password, no profile.</li>
+        <li><strong>We do not store your videos.</strong> Uploaded files are deleted immediately after your ZIP download completes.</li>
+        <li><strong>We do not view, analyze, or train on your content.</strong> Processing is fully automated.</li>
+        <li><strong>We do not sell or share your data with advertisers.</strong></li>
+      </ul>
+
+      <h2>2. What We Collect</h2>
+      <table>
+        <thead>
+          <tr><th>Data</th><th>Why</th><th>Retention</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Uploaded video file</td>
+            <td>To extract still frames as requested</td>
+            <td>Deleted within minutes of ZIP download (or within 2 hours if abandoned)</td>
+          </tr>
+          <tr>
+            <td>Extracted frames / ZIP file</td>
+            <td>To deliver to you</td>
+            <td>Deleted immediately after delivery</td>
+          </tr>
+          <tr>
+            <td>Stripe Checkout session ID</td>
+            <td>To verify payment and prevent reuse of a paid session</td>
+            <td>48 hours</td>
+          </tr>
+          <tr>
+            <td>Payment details (card number, billing address)</td>
+            <td>Handled entirely by Stripe — we never see your card data</td>
+            <td>Per Stripe's policy</td>
+          </tr>
+          <tr>
+            <td>Server logs (IP address, request time, error info)</td>
+            <td>Security, debugging, abuse prevention</td>
+            <td>30 days</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>3. How We Use Your Data</h2>
+      <ul>
+        <li>To process your video and deliver the ZIP file.</li>
+        <li>To verify your payment was completed.</li>
+        <li>To prevent abuse (e.g., one-time-use enforcement of paid sessions).</li>
+        <li>To respond to support requests you send us.</li>
+      </ul>
+      <p>We do <strong>not</strong> use your video content for training AI, marketing, advertising, analytics, or any other purpose beyond extracting your requested still frames.</p>
+
+      <h2>4. Third-Party Services</h2>
+      <p>We rely on these vetted third-party services to operate:</p>
+      <ul>
+        <li><strong>Stripe</strong> (<a href="https://stripe.com/privacy" target="_blank">Stripe Privacy Policy</a>) — handles all payment processing. We never see your card details.</li>
+        <li><strong>Railway</strong> (<a href="https://railway.app/legal/privacy" target="_blank">Railway Privacy</a>) — hosts the application.</li>
+        <li><strong>Cloudflare</strong> (<a href="https://www.cloudflare.com/privacypolicy/" target="_blank">Cloudflare Privacy</a>) — DDoS protection and network infrastructure.</li>
+        <li><strong>Upstash</strong> (<a href="https://upstash.com/trust/privacy.pdf" target="_blank">Upstash Privacy</a>) — short-term session storage (Redis).</li>
+      </ul>
+      <p>These providers may process technical data (like IP addresses) as necessary to deliver the Service.</p>
+
+      <h2>5. Cookies and Tracking</h2>
+      <p>FrameGrab does not use tracking cookies, advertising pixels, or third-party analytics that profile you across the web. The Service may use a minimal session cookie set by your browser for technical operation, but this is not used for tracking.</p>
+
+      <h2>6. Children's Privacy</h2>
+      <p>FrameGrab is not directed to children under 13. We do not knowingly collect data from children under 13. If you believe a child has used the Service, contact us and we will take appropriate action.</p>
+
+      <h2>7. Data Security</h2>
+      <p>We protect your data with industry-standard measures:</p>
+      <ul>
+        <li>All traffic is encrypted via HTTPS (TLS).</li>
+        <li>File uploads are processed in isolated jobs and deleted immediately after delivery.</li>
+        <li>Payment data is handled exclusively by Stripe (PCI-compliant).</li>
+        <li>No long-term storage of user-uploaded content.</li>
+      </ul>
+
+      <h2>8. Your Rights</h2>
+      <p>Depending on your location, you may have the right to access, correct, delete, or restrict processing of personal data we hold. Because we retain so little data and delete uploaded content immediately, there's typically nothing for us to provide or delete. To make a request, email <a href="mailto:TechnicianFilms@gmail.com">TechnicianFilms@gmail.com</a>.</p>
+
+      <h2>9. International Users</h2>
+      <p>FrameGrab is operated from the United States. By using the Service, you consent to your data being processed in the US, which may have different data protection laws than your jurisdiction.</p>
+
+      <h2>10. Changes to This Policy</h2>
+      <p>We may update this Privacy Policy from time to time. The "Last updated" date at the top reflects the most recent change. Continued use of the Service after changes constitutes acceptance.</p>
+
+      <h2>11. Contact</h2>
+      <p>Questions or concerns about this Privacy Policy? Email <a href="mailto:TechnicianFilms@gmail.com">TechnicianFilms@gmail.com</a>.</p>
+    </main>
+    <footer>
+      <div class="footer-inner">
+        <span class="footer-logo">FRAMEGRAB</span>
+        <span>by <a href="https://technicianfilms.com" target="_blank">Technician Films</a></span>
+        <span>·</span>
+        <a href="/terms">Terms</a>
+        <span>·</span>
+        <a href="/privacy">Privacy</a>
+        <span>·</span>
+        <a href="mailto:TechnicianFilms@gmail.com">Support</a>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

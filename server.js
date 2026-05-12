@@ -270,6 +270,10 @@ async function getSession(id) {
 const app = express();
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Clean URLs for legal pages
+app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, 'public', 'terms.html')));
+app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy.html')));
+
 // Stripe webhook needs raw body — mount BEFORE express.json()
 app.post('/webhook', express.raw({ type: 'application/json' }), handleWebhook);
 
