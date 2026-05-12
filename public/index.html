@@ -46,6 +46,24 @@
   }
   </script>
 
+  <!-- FAQ structured data for rich SERP results -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "What video formats are supported?", "acceptedAnswer": { "@type": "Answer", "text": "MP4, MOV (including ProRes), MKV, AVI, MXF, WebM, M4V, MTS, and M2TS. Camera RAW formats like R3D and BRAW are not supported — transcode to ProRes or H.264 first." } },
+      { "@type": "Question", "name": "What resolution do I get?", "acceptedAnswer": { "@type": "Answer", "text": "Stills come out at the exact pixel dimensions of your source video. Drop in 4K, you get 4K. Drop in 1080p, you get 1080p. No resampling, no resizing." } },
+      { "@type": "Question", "name": "How many frames will I get?", "acceptedAnswer": { "@type": "Answer", "text": "Roughly six stills per second of footage. A 60-second clip returns about 300 frames. A 30-second clip returns about 150." } },
+      { "@type": "Question", "name": "How long does processing take?", "acceptedAnswer": { "@type": "Answer", "text": "Most jobs finish in under a minute. Larger files (1GB+) or longer durations may take 2–3 minutes." } },
+      { "@type": "Question", "name": "Is my footage stored or shared?", "acceptedAnswer": { "@type": "Answer", "text": "No. Your video is processed in memory and deleted from our servers the moment your download finishes. We never view, store, or analyze your content." } },
+      { "@type": "Question", "name": "What's the file size and length limit?", "acceptedAnswer": { "@type": "Answer", "text": "Up to 2GB per file and 5 minutes of footage." } },
+      { "@type": "Question", "name": "Do I need an account?", "acceptedAnswer": { "@type": "Answer", "text": "No accounts, no signups, no logins. Pay $1.99, upload, download. That's the entire flow." } },
+      { "@type": "Question", "name": "Can I use the stills commercially?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. You own your footage, you own the extracted stills. Use them anywhere — portfolio, social, client deliverables, festival submissions, prints." } }
+    ]
+  }
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -86,15 +104,27 @@
         <div class="usecases">
           <div class="usecase">
             <div class="usecase-role">Cinematographers</div>
-            <div class="usecase-desc">Pull hero frames from a feature or commercial for your portfolio site without cracking open Premiere.</div>
+            <div class="usecase-desc">Pull hero frames from a feature or commercial for your portfolio without cracking open Premiere.</div>
+          </div>
+          <div class="usecase">
+            <div class="usecase-role">Editors &amp; Post</div>
+            <div class="usecase-desc">Generate stills for review docs, pitch decks, festival submissions, or social handoffs in seconds.</div>
+          </div>
+          <div class="usecase">
+            <div class="usecase-role">DITs &amp; Dailies</div>
+            <div class="usecase-desc">Spin up reference stills from a day's footage for the director, DP, or color team — no scrubbing required.</div>
           </div>
           <div class="usecase">
             <div class="usecase-role">Directors &amp; AD's</div>
             <div class="usecase-desc">Pull clean frames from your footage to use as references, selects, or client-facing deliverables.</div>
           </div>
           <div class="usecase">
+            <div class="usecase-role">Producers</div>
+            <div class="usecase-desc">Build sizzle reels, client decks, or BTS galleries from existing footage — no post team required.</div>
+          </div>
+          <div class="usecase">
             <div class="usecase-role">Social &amp; Content</div>
-            <div class="usecase-desc">Turn a brand film or campaign video into a full set of images ready for Instagram, LinkedIn, your site, or anywhere else.</div>
+            <div class="usecase-desc">Turn a brand film or campaign video into a full set of images ready for Instagram, LinkedIn, or your site.</div>
           </div>
         </div>
 
@@ -167,8 +197,8 @@
                   <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
                 </svg>
               </div>
-              <h3>Most formats you shoot</h3>
-              <p>MP4, MOV with ProRes, MXF, MKV, AVI, WebM, and more. <strong>Not supported:</strong> R3D, BRAW, or other camera RAW files — transcode first.</p>
+              <h3>Most formats you export</h3>
+              <p>Drop in MP4, MOV with ProRes, MXF, MKV, AVI, WebM — whatever your editor spits out. <strong>Not supported:</strong> R3D, BRAW, or other camera RAW files. Transcode to ProRes or H.264 first.</p>
             </div>
             <div class="why-card">
               <div class="why-icon">
@@ -197,6 +227,53 @@
               <h3>Private by design</h3>
               <p>Your footage never gets stored. Files are processed and deleted the moment your download completes. We see nothing.</p>
             </div>
+          </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="faq-section">
+          <h2 class="why-title">Frequently asked questions</h2>
+          <div class="faq-list">
+            <details class="faq-item">
+              <summary>What video formats are supported?</summary>
+              <div class="faq-answer">MP4, MOV (including ProRes), MKV, AVI, MXF, WebM, M4V, MTS, and M2TS. Camera RAW formats like R3D and BRAW are not supported — transcode to ProRes or H.264 first.</div>
+            </details>
+            <details class="faq-item">
+              <summary>What resolution do I get?</summary>
+              <div class="faq-answer">Stills come out at the exact pixel dimensions of your source video. Drop in 4K, you get 4K. Drop in 1080p, you get 1080p. No resampling, no resizing.</div>
+            </details>
+            <details class="faq-item">
+              <summary>How many frames will I get?</summary>
+              <div class="faq-answer">Roughly six stills per second of footage. A 60-second clip returns about 300 frames. A 30-second clip returns about 150.</div>
+            </details>
+            <details class="faq-item">
+              <summary>How long does processing take?</summary>
+              <div class="faq-answer">Most jobs finish in under a minute. Larger files (1GB+) or longer durations may take 2–3 minutes. You'll see a progress indicator — leave the tab open until it completes.</div>
+            </details>
+            <details class="faq-item">
+              <summary>Is my footage stored or shared?</summary>
+              <div class="faq-answer">No. Your video is processed in memory and deleted from our servers the moment your download finishes. We never view, store, or analyze your content. Read our <a href="/privacy">privacy policy</a> for details.</div>
+            </details>
+            <details class="faq-item">
+              <summary>What's the file size and length limit?</summary>
+              <div class="faq-answer">Up to 2GB per file and 5 minutes of footage. If your clip is longer, trim it down before uploading.</div>
+            </details>
+            <details class="faq-item">
+              <summary>Do I need an account?</summary>
+              <div class="faq-answer">No accounts, no signups, no logins. Pay $1.99, upload, download. That's the entire flow.</div>
+            </details>
+            <details class="faq-item">
+              <summary>What if processing fails or my download breaks?</summary>
+              <div class="faq-answer">If anything goes wrong on our end, your session is automatically restored so you can upload again at no charge. If something else goes wrong, email <a href="mailto:TechnicianFilms@gmail.com">TechnicianFilms@gmail.com</a> — we'll make it right.</div>
+            </details>
+            <details class="faq-item">
+              <summary>Can I use the stills commercially?</summary>
+              <div class="faq-answer">Yes. You own your footage, you own the extracted stills. Use them anywhere — portfolio, social, client deliverables, festival submissions, prints.</div>
+            </details>
+            <details class="faq-item">
+              <summary>What output format should I choose?</summary>
+              <div class="faq-answer"><strong>JPG</strong> for portfolios and social (best balance of quality and size). <strong>PNG</strong> if you need lossless or transparency support. <strong>WebP</strong> for web use where every kilobyte matters.</div>
+            </details>
           </div>
         </div>
 
