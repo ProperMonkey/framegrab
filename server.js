@@ -181,6 +181,16 @@ const upload = multer({
 // ── Routes ───────────────────────────────────────────────────────────────
 
 // Config exposed to frontend
+// Current queue status
+app.get('/api/queue-status', (req, res) => {
+  res.json({
+    activeJobs,
+    queueLength: jobQueue.length,
+    maxConcurrent: MAX_CONCURRENT_JOBS,
+    isBusy: activeJobs >= MAX_CONCURRENT_JOBS
+  });
+});
+
 app.get('/api/config', (req, res) => {
   res.json({
     priceLabel: PRICE_LABEL,

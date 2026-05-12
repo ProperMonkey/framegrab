@@ -165,10 +165,21 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
   formData.append('interval', '5');
 
   try {
-    // Switch message after upload completes to indicate queued state
+    // Check if there's an actual queue before deciding what message to show
+    let willBeQueued = false;
+    try {
+      const qRes = await fetch('/api/queue-status');
+      const qData = await qRes.json();
+      willBeQueued = qData.isBusy;
+    } catch (_) {}
+
     const uploadTimeout = setTimeout(() => {
-      setProcessing('Your video is queued — you\'re next in line…', 30);
-      setTimeout(() => setProcessing('Processing your frames…', 40), 8000);
+      if (willBeQueued) {
+        setProcessing('Your video is queued — you\'re next in line…', 30);
+        setTimeout(() => setProcessing('Processing your frames…', 40), 8000);
+      } else {
+        setProcessing('Processing your frames…', 35);
+      }
     }, 4000);
 
     // Fake progress during upload/processing
