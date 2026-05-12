@@ -15,9 +15,75 @@ const Stripe = require('stripe');
 const nodemailer = require('nodemailer');
 const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { Upload } = require('@aws-sdk/lib-storage');
+const { Redis } = require('@upstash/redis');
+
+// ── Redis Session Store ──────────────────────────────────────────────────
+const redis = (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
+  ? new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN
+    })
+  : null;
+
+const SESSION_TTL_SECONDS = 48 * 60 * 60; // 48 hours
+
+async function redisInsertSession(id, status) {
+  if (!redis) return false;
+  // NX = only set if not exists, EX = expire after 48h
+  await redis.set(`session:${id}`, JSON.stringify({ status, createdAt: Date.now() }), {
+    nx: true,
+    ex: SESSION_TTL_SECONDS
+  });
+  return true;
+}
+
+async function redisGetSession(id) {
+  if (!redis) return null;
+  const raw = await redis.get(`session:${id}`);
+  if (!raw) return null;
+  return typeof raw === 'string' ? JSON.parse(raw) : raw;
+}
+
+async function redisMarkPaid(id) {
+  if (!redis) return false;
+  // Use a Lua-style check by getting + setting only if pending
+  const cur = await redisGetSession(id);
+  if (!cur) {
+    await redis.set(`session:${id}`, JSON.stringify({ status: 'paid', createdAt: Date.now() }), {
+      ex: SESSION_TTL_SECONDS
+    });
+    return true;
+  }
+  if (cur.status === 'pending') {
+    await redis.set(`session:${id}`, JSON.stringify({ ...cur, status: 'paid' }), {
+      ex: SESSION_TTL_SECONDS
+    });
+    return true;
+  }
+  return cur.status === 'paid';
+}
+
+async function redisMarkUsed(id) {
+  if (!redis) return false;
+  // Atomic check-and-set: only mark used if currently paid
+  // Using a simple approach — Redis SET with conditional check via Lua would be safer
+  // but Upstash REST doesn't support Lua. We'll use a separate "used" flag with NX.
+  const result = await redis.set(`session:${id}:used`, '1', { nx: true, ex: SESSION_TTL_SECONDS });
+  if (result !== 'OK') return false; // Already marked used
+  const cur = await redisGetSession(id);
+  if (!cur || cur.status !== 'paid') {
+    // Rollback: shouldn't happen normally
+    await redis.del(`session:${id}:used`);
+    return false;
+  }
+  await redis.set(`session:${id}`, JSON.stringify({ ...cur, status: 'used', usedAt: Date.now() }), {
+    ex: SESSION_TTL_SECONDS
+  });
+  return true;
+}
 
 // ── Concurrency limiter ──────────────────────────────────────────────────
-const MAX_CONCURRENT_JOBS = parseInt(process.env.MAX_CONCURRENT_JOBS || '2', 10);
+const MAX_CONCURRENT_JOBS = parseInt(process.env.MAX_CONCURRENT_JOBS || '8', 10);
 let activeJobs = 0;
 const jobQueue = [];
 
@@ -113,46 +179,50 @@ const UPLOADS_DIR = path.join(__dirname, 'uploads');
 const FRAMES_DIR = path.join(__dirname, 'frames');
 [UPLOADS_DIR, FRAMES_DIR].forEach(d => fs.mkdirSync(d, { recursive: true }));
 
-// ── JSON session store ───────────────────────────────────────────────────
-// Simple file-backed store: { [sessionId]: { status, createdAt, usedAt } }
+// ── Session store (Redis with JSON fallback for local dev) ───────────────
 const SESSIONS_FILE = path.join(__dirname, 'sessions.json');
 
-function loadSessions() {
+function _loadFile() {
   try { return JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf8')); } catch (_) { return {}; }
 }
-function saveSessions(data) {
+function _saveFile(data) {
   fs.writeFileSync(SESSIONS_FILE, JSON.stringify(data), 'utf8');
 }
 
-function insertSession(id, status) {
-  const s = loadSessions();
-  if (!s[id]) { s[id] = { status, createdAt: Date.now() }; saveSessions(s); }
-}
-function markPaid(id) {
-  const s = loadSessions();
-  if (s[id] && s[id].status === 'pending') { s[id].status = 'paid'; saveSessions(s); return true; }
-  return false;
-}
-function markUsed(id) {
-  const s = loadSessions();
-  if (s[id] && s[id].status === 'paid') {
-    s[id].status = 'used'; s[id].usedAt = Date.now(); saveSessions(s); return true;
+async function insertSession(id, status) {
+  if (redis) {
+    return redisInsertSession(id, status);
   }
-  return false;
+  const s = _loadFile();
+  if (!s[id]) { s[id] = { status, createdAt: Date.now() }; _saveFile(s); }
 }
-function getSession(id) { return loadSessions()[id] || null; }
 
-// Prune sessions older than 48h
-function pruneSessions() {
-  const s = loadSessions();
-  const cutoff = Date.now() - 48 * 60 * 60 * 1000;
-  let changed = false;
-  for (const [id, row] of Object.entries(s)) {
-    if (row.createdAt < cutoff) { delete s[id]; changed = true; }
+async function markPaid(id) {
+  if (redis) {
+    return redisMarkPaid(id);
   }
-  if (changed) saveSessions(s);
+  const s = _loadFile();
+  if (s[id] && s[id].status === 'pending') { s[id].status = 'paid'; _saveFile(s); return true; }
+  return false;
 }
-setInterval(pruneSessions, 60 * 60 * 1000);
+
+async function markUsed(id) {
+  if (redis) {
+    return redisMarkUsed(id);
+  }
+  const s = _loadFile();
+  if (s[id] && s[id].status === 'paid') {
+    s[id].status = 'used'; s[id].usedAt = Date.now(); _saveFile(s); return true;
+  }
+  return false;
+}
+
+async function getSession(id) {
+  if (redis) {
+    return redisGetSession(id);
+  }
+  return _loadFile()[id] || null;
+}
 
 // ── Express ──────────────────────────────────────────────────────────────
 const app = express();
@@ -209,8 +279,8 @@ app.post('/api/checkout', async (req, res) => {
   if (!stripe) {
     // Dev mode: skip payment, issue a fake session
     const fakeId = 'dev_' + uuidv4();
-    insertSession(fakeId, 'pending');
-    markPaid(fakeId);
+    await insertSession(fakeId, 'pending');
+    await markPaid(fakeId);
     return res.json({ url: `${BASE_URL}/?session_id=${fakeId}` });
   }
 
@@ -233,7 +303,7 @@ app.post('/api/checkout', async (req, res) => {
       expires_at: Math.floor(Date.now() / 1000) + 1800 // 30 min
     });
 
-    insertSession(session.id, 'pending');
+    await insertSession(session.id, 'pending');
     res.json({ url: session.url });
   } catch (err) {
     console.error('Stripe error:', err.message);
@@ -244,7 +314,7 @@ app.post('/api/checkout', async (req, res) => {
 // Validate a session before allowing upload
 app.get('/api/session/:id', async (req, res) => {
   const id = req.params.id;
-  const row = getSession(id);
+  const row = await getSession(id);
 
   if (row && row.status === 'paid') {
     return res.json({ valid: true });
@@ -256,8 +326,8 @@ app.get('/api/session/:id', async (req, res) => {
       const session = await stripe.checkout.sessions.retrieve(id);
       console.log(`Stripe session check: ${id} → payment_status=${session.payment_status}`);
       if (session.payment_status === 'paid') {
-        insertSession(id, 'pending');
-        markPaid(id);
+        await insertSession(id, 'pending');
+        await markPaid(id);
         return res.json({ valid: true });
       }
     } catch (e) {
@@ -265,7 +335,8 @@ app.get('/api/session/:id', async (req, res) => {
     }
   }
 
-  console.log(`Session invalid: ${id} — row=${JSON.stringify(getSession(id))}`);
+  const finalRow = await getSession(id);
+  console.log(`Session invalid: ${id} — row=${JSON.stringify(finalRow)}`);
   res.json({ valid: false });
 });
 
@@ -283,7 +354,7 @@ app.post('/api/extract', (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file received' });
 
     // Validate session
-    const session = getSession(sessionId);
+    const session = await getSession(sessionId);
     if (!session || session.status !== 'paid') {
       fs.unlink(req.file.path, () => {});
       return res.status(402).json({ error: 'Payment required or session already used' });
@@ -301,8 +372,8 @@ app.post('/api/extract', (req, res) => {
         });
       }
 
-      // Mark session as used immediately to prevent double-use
-      const changed = markUsed(sessionId);
+      // Mark session as used immediately to prevent double-use (atomic in Redis)
+      const changed = await markUsed(sessionId);
       if (!changed) {
         fs.unlink(videoPath, () => {});
         return res.status(402).json({ error: 'Session already used' });
@@ -351,7 +422,7 @@ app.post('/api/extract', (req, res) => {
 });
 
 // ── Stripe Webhook ────────────────────────────────────────────────────────
-function handleWebhook(req, res) {
+async function handleWebhook(req, res) {
   if (!stripe || !STRIPE_WEBHOOK_SECRET) return res.sendStatus(200);
 
   let event;
@@ -365,9 +436,13 @@ function handleWebhook(req, res) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     if (session.payment_status === 'paid') {
-      insertSession(session.id, 'pending');
-      markPaid(session.id);
-      console.log('Payment confirmed:', session.id);
+      try {
+        await insertSession(session.id, 'pending');
+        await markPaid(session.id);
+        console.log('Payment confirmed:', session.id);
+      } catch (err) {
+        console.error('Webhook session write failed:', err.message);
+      }
     }
   }
 
