@@ -207,6 +207,13 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
     link.href = url;
     link.download = filename;
 
+    // Reveal "extract another" only after they click download
+    const anotherBtn = document.getElementById('anotherBtn');
+    anotherBtn.classList.add('hidden');
+    link.addEventListener('click', () => {
+      setTimeout(() => anotherBtn.classList.remove('hidden'), 1500);
+    }, { once: true });
+
     showView('done');
 
     // Clean up object URL after a delay
