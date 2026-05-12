@@ -13,6 +13,8 @@ const ffmpegPath = require('ffmpeg-static');
 const { v4: uuidv4 } = require('uuid');
 const Stripe = require('stripe');
 const nodemailer = require('nodemailer');
+const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { Upload } = require('@aws-sdk/lib-storage');
 
 // ── Concurrency limiter ──────────────────────────────────────────────────
 const MAX_CONCURRENT_JOBS = parseInt(process.env.MAX_CONCURRENT_JOBS || '2', 10);
@@ -37,6 +39,33 @@ function releaseSlot() {
   } else {
     activeJobs--;
   }
+}
+
+// ── R2 Storage ───────────────────────────────────────────────────────────
+const R2_BUCKET = process.env.R2_BUCKET;
+const r2 = (process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY && process.env.R2_ENDPOINT)
+  ? new S3Client({
+      region: 'auto',
+      endpoint: process.env.R2_ENDPOINT,
+      credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY
+      }
+    })
+  : null;
+
+async function uploadZipToR2(zipBuffer, key) {
+  const upload = new Upload({
+    client: r2,
+    params: { Bucket: R2_BUCKET, Key: key, Body: zipBuffer, ContentType: 'application/zip' }
+  });
+  await upload.done();
+}
+
+async function deleteFromR2(key) {
+  try {
+    await r2.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: key }));
+  } catch (_) {}
 }
 
 // ── Config ──────────────────────────────────────────────────────────────
@@ -285,19 +314,38 @@ app.post('/api/extract', (req, res) => {
         releaseSlot();
       }
 
+      const zipFilename = `framegrab_${jobId.slice(0, 8)}.zip`;
       res.setHeader('Content-Type', 'application/zip');
-      res.setHeader('Content-Disposition', `attachment; filename="framegrab_${jobId.slice(0, 8)}.zip"`);
+      res.setHeader('Content-Disposition', `attachment; filename="${zipFilename}"`);
 
-      const archive = archiver('zip', { zlib: { level: 1 } });
-      archive.pipe(res);
-      archive.directory(outputDir, false);
+      if (r2) {
+        // Build ZIP in memory, upload to R2, stream back to user
+        const archive = archiver('zip', { zlib: { level: 1 } });
+        const chunks = [];
+        archive.on('data', chunk => chunks.push(chunk));
+        archive.on('error', err => console.error('Archive error:', err));
+        archive.directory(outputDir, false);
+        await archive.finalize();
 
-      archive.on('error', err => console.error('Archive error:', err));
+        const zipBuffer = Buffer.concat(chunks);
+        const r2Key = `zips/${jobId}/${zipFilename}`;
+        await uploadZipToR2(zipBuffer, r2Key);
 
-      await archive.finalize();
+        res.end(zipBuffer);
 
-      res.on('finish', () => cleanup(videoPath, outputDir));
-      res.on('close', () => cleanup(videoPath, outputDir));
+        // Cleanup local files and R2 object
+        cleanup(videoPath, outputDir);
+        setTimeout(() => deleteFromR2(r2Key), 60000);
+      } else {
+        // Fallback: stream directly (no R2)
+        const archive = archiver('zip', { zlib: { level: 1 } });
+        archive.pipe(res);
+        archive.directory(outputDir, false);
+        archive.on('error', err => console.error('Archive error:', err));
+        await archive.finalize();
+        res.on('finish', () => cleanup(videoPath, outputDir));
+        res.on('close', () => cleanup(videoPath, outputDir));
+      }
 
     } catch (err) {
       console.error('Extraction error:', err);
