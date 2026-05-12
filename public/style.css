@@ -318,10 +318,10 @@ input[type="range"]::-webkit-slider-thumb {
 .hidden { display: none !important; }
 
 /* ── Footer ── */
-footer { margin-top: auto; padding: 32px 24px; width: 100%; max-width: 760px; border-top: 1px solid var(--border); }
-.footer-inner { display: flex; align-items: center; gap: 14px; font-size: 13px; color: #888; flex-wrap: wrap; }
-.footer-logo { font-size: 11px; font-weight: 800; letter-spacing: 0.25em; color: #888; }
-footer a { color: #aaa; text-decoration: none; }
+footer { margin-top: auto; padding: 36px 24px; width: 100%; max-width: 760px; border-top: 1px solid var(--border); }
+.footer-inner { display: flex; align-items: center; justify-content: center; gap: 18px; font-size: 15px; color: #b0b0b0; flex-wrap: wrap; }
+.footer-logo { font-size: 13px; font-weight: 800; letter-spacing: 0.25em; color: #b0b0b0; }
+footer a { color: #d0d0d0; text-decoration: none; }
 footer a:hover { color: var(--text); }
 
 /* ── Toast ── */
