@@ -264,8 +264,11 @@ const upload = multer({
   storage,
   limits: { fileSize: MAX_FILE_MB * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const ok = /\.(mp4|mov|mxf|avi|mkv|m4v|r3d|braw|mts|m2ts|webm)$/i.test(file.originalname);
-    ok ? cb(null, true) : cb(new Error('Unsupported file type'));
+    if (/\.(r3d|braw|arri|ari|crm|cdng|dng)$/i.test(file.originalname)) {
+      return cb(new Error('Camera RAW files (R3D, BRAW, ARRIRAW) are not supported. Please transcode to ProRes, H.264, or H.265 first.'));
+    }
+    const ok = /\.(mp4|mov|mxf|avi|mkv|m4v|mts|m2ts|webm)$/i.test(file.originalname);
+    ok ? cb(null, true) : cb(new Error('Unsupported file type. Supported: MP4, MOV, MKV, AVI, MXF, WebM.'));
   }
 });
 
