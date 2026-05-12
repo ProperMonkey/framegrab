@@ -72,6 +72,48 @@ async function verifyAndShowUpload(sid) {
   showToast('Payment could not be verified. If you were charged, please contact support at TechnicianFilms@gmail.com');
 }
 
+// ── Pre-pay compatibility check (optional, filename-only) ────────────────
+try {
+  const SUPPORTED_EXT = ['mp4', 'mov', 'mkv', 'avi', 'mxf', 'webm', 'm4v', 'mts', 'm2ts'];
+  const RAW_EXT = ['r3d', 'braw', 'ari', 'arri', 'crm', 'cdng', 'dng'];
+
+  const precheckInput = document.getElementById('precheckInput');
+  const precheckResult = document.getElementById('precheckResult');
+
+  if (precheckInput && precheckResult) {
+    precheckInput.addEventListener('change', () => {
+      const file = precheckInput.files && precheckInput.files[0];
+      if (!file) return;
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+
+      precheckResult.classList.remove('ok', 'bad');
+
+      if (RAW_EXT.includes(ext)) {
+        precheckResult.classList.add('bad');
+        precheckResult.innerHTML = `✗ <strong>${escapeHTML(file.name)}</strong> — ${ext.toUpperCase()} files aren't compatible. Transcode to ProRes or H.264 in your editor first, then come back.`;
+      } else if (SUPPORTED_EXT.includes(ext)) {
+        const sizeWarning = file.size > 2 * 1024 * 1024 * 1024
+          ? ` (${sizeMB}MB exceeds the 2GB limit — trim or compress)`
+          : '';
+        precheckResult.classList.add(sizeWarning ? 'bad' : 'ok');
+        precheckResult.innerHTML = sizeWarning
+          ? `✗ <strong>${escapeHTML(file.name)}</strong>${sizeWarning}`
+          : `✓ <strong>${escapeHTML(file.name)}</strong> (${sizeMB}MB) — extension looks good. Pay to upload and process.`;
+      } else {
+        precheckResult.classList.add('bad');
+        precheckResult.innerHTML = `✗ <strong>${escapeHTML(file.name)}</strong> — not a supported video format. Supported: MP4, MOV, MKV, AVI, MXF, WebM.`;
+      }
+    });
+  }
+
+  function escapeHTML(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+} catch (e) {
+  console.warn('Pre-check init failed (non-fatal):', e);
+}
+
 // ── Payment ───────────────────────────────────────────────────────────────
 document.getElementById('payBtn').addEventListener('click', async () => {
   const btn = document.getElementById('payBtn');

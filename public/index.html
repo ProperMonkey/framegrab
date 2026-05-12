@@ -169,6 +169,22 @@
             </div>
           </div>
 
+          <!-- Optional pre-pay compatibility check -->
+          <div class="precheck">
+            <details class="precheck-toggle">
+              <summary>Want to verify your file is compatible before paying? <span class="precheck-caret">▾</span></summary>
+              <div class="precheck-body">
+                <label for="precheckInput" class="precheck-pick">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  Choose file to check
+                </label>
+                <input type="file" id="precheckInput" accept="video/*,.mp4,.mov,.mkv,.avi,.mxf,.webm,.m4v,.mts,.m2ts,.r3d,.braw,.ari,.arri,.crm,.cdng,.dng" />
+                <div id="precheckResult" class="precheck-result"></div>
+                <p class="precheck-note">Filename check only — doesn't open or upload your file. Codec issues inside the file can only be confirmed during processing, but auto-retry covers that.</p>
+              </div>
+            </details>
+          </div>
+
           <button id="payBtn" class="btn-pay">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
