@@ -78,19 +78,37 @@ document.getElementById('payBtn').addEventListener('click', async () => {
   btn.disabled = true;
   btn.textContent = 'Redirecting to Stripe…';
 
-  try {
-    const res = await fetch('/api/checkout', { method: 'POST' });
-    const data = await res.json();
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      throw new Error(data.error || 'Checkout failed');
+  // Retry checkout up to 4 times if server returns 503 (rate-limited)
+  let lastError = 'Checkout failed';
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    try {
+      const res = await fetch('/api/checkout', { method: 'POST' });
+
+      if (res.status === 503 && attempt < 4) {
+        btn.textContent = `High traffic — retrying… (${attempt}/4)`;
+        await new Promise(r => setTimeout(r, 1500 + Math.random() * 1500));
+        continue;
+      }
+
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      lastError = data.error || 'Checkout failed';
+      break;
+    } catch (err) {
+      lastError = err.message;
+      if (attempt < 4) {
+        await new Promise(r => setTimeout(r, 1500));
+        continue;
+      }
     }
-  } catch (err) {
-    showToast(err.message);
-    btn.disabled = false;
-    btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Pay ${config.priceLabel} &amp; Upload`;
   }
+
+  showToast(lastError);
+  btn.disabled = false;
+  btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Pay ${config.priceLabel} &amp; Upload`;
 });
 
 // ── Drop zone ─────────────────────────────────────────────────────────────
