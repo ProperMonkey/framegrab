@@ -333,34 +333,14 @@ app.post('/api/extract', (req, res) => {
       res.setHeader('Content-Type', 'application/zip');
       res.setHeader('Content-Disposition', `attachment; filename="${zipFilename}"`);
 
-      if (r2) {
-        // Build ZIP in memory, upload to R2, stream back to user
-        const archive = archiver('zip', { zlib: { level: 1 } });
-        const chunks = [];
-        archive.on('data', chunk => chunks.push(chunk));
-        archive.on('error', err => console.error('Archive error:', err));
-        archive.directory(outputDir, false);
-        await archive.finalize();
-
-        const zipBuffer = Buffer.concat(chunks);
-        const r2Key = `zips/${jobId}/${zipFilename}`;
-        await uploadZipToR2(zipBuffer, r2Key);
-
-        res.end(zipBuffer);
-
-        // Cleanup local files and R2 object
-        cleanup(videoPath, outputDir);
-        setTimeout(() => deleteFromR2(r2Key), 60000);
-      } else {
-        // Fallback: stream directly (no R2)
-        const archive = archiver('zip', { zlib: { level: 1 } });
-        archive.pipe(res);
-        archive.directory(outputDir, false);
-        archive.on('error', err => console.error('Archive error:', err));
-        await archive.finalize();
-        res.on('finish', () => cleanup(videoPath, outputDir));
-        res.on('close', () => cleanup(videoPath, outputDir));
-      }
+      // Stream ZIP directly to user (memory-efficient)
+      const archive = archiver('zip', { zlib: { level: 1 } });
+      archive.pipe(res);
+      archive.directory(outputDir, false);
+      archive.on('error', err => console.error('Archive error:', err));
+      await archive.finalize();
+      res.on('finish', () => cleanup(videoPath, outputDir));
+      res.on('close', () => cleanup(videoPath, outputDir));
 
     } catch (err) {
       console.error('Extraction error:', err);
