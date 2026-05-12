@@ -552,11 +552,15 @@ function extractFrames(videoPath, outputDir, format, interval, quality) {
     const outputPattern = path.join(outputDir, `frame_%05d.${ext}`);
 
     const qualityArgs = [];
+    // Pixel format conversion — critical for 10-bit 4:2:2 sources (Canon XF-AVC Intra, etc.)
+    // Forces output to standard 8-bit pixel format so encoders don't stall
     if (ext === 'jpg') {
       const qv = Math.max(1, Math.round(31 - (quality / 100) * 30));
-      qualityArgs.push('-q:v', String(qv));
+      qualityArgs.push('-q:v', String(qv), '-pix_fmt', 'yuvj420p');
     } else if (ext === 'webp') {
-      qualityArgs.push('-quality', String(quality));
+      qualityArgs.push('-quality', String(quality), '-pix_fmt', 'yuv420p');
+    } else if (ext === 'png') {
+      qualityArgs.push('-pix_fmt', 'rgb24');
     }
 
     const args = [
@@ -570,14 +574,27 @@ function extractFrames(videoPath, outputDir, format, interval, quality) {
     const ff = spawn(ffmpegPath, args);
     let stderr = '';
     ff.stderr.on('data', d => stderr += d.toString());
+
+    // Safety timeout — kill ffmpeg if it hangs (e.g., codec incompatibility stall)
+    const timeoutMs = 4 * 60 * 1000; // 4 minutes
+    const killTimer = setTimeout(() => {
+      console.error('ffmpeg timeout — killing process');
+      try { ff.kill('SIGKILL'); } catch (_) {}
+      reject(new Error('Processing took too long — file may use an incompatible codec'));
+    }, timeoutMs);
+
     ff.on('close', code => {
+      clearTimeout(killTimer);
       if (code !== 0) {
         console.error('ffmpeg stderr tail:', stderr.slice(-1500));
         return reject(new Error('Frame extraction failed'));
       }
       resolve(fs.readdirSync(outputDir).length);
     });
-    ff.on('error', reject);
+    ff.on('error', err => {
+      clearTimeout(killTimer);
+      reject(err);
+    });
   });
 }
 
