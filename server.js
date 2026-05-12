@@ -244,16 +244,18 @@ app.get('/api/session/:id', async (req, res) => {
   if (stripe && id.startsWith('cs_')) {
     try {
       const session = await stripe.checkout.sessions.retrieve(id);
+      console.log(`Stripe session check: ${id} → payment_status=${session.payment_status}`);
       if (session.payment_status === 'paid') {
         insertSession(id, 'pending');
         markPaid(id);
         return res.json({ valid: true });
       }
     } catch (e) {
-      // not found or error — fall through
+      console.error('Stripe session retrieve error:', e.message);
     }
   }
 
+  console.log(`Session invalid: ${id} — row=${JSON.stringify(getSession(id))}`);
   res.json({ valid: false });
 });
 
