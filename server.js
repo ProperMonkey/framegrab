@@ -128,6 +128,41 @@ function releaseSlot() {
   }
 }
 
+// ── Free tier rate limiting ──────────────────────────────────────────────
+const FREE_DAILY_LIMIT = parseInt(process.env.FREE_DAILY_LIMIT || '3', 10);
+const FREE_MAX_FILE_MB = parseInt(process.env.FREE_MAX_FILE_MB || '500', 10);
+const FREE_MAX_DURATION = parseInt(process.env.FREE_MAX_DURATION || '120', 10); // 2 min
+const FREE_OUTPUT_HEIGHT = parseInt(process.env.FREE_OUTPUT_HEIGHT || '720', 10);
+
+function getClientIp(req) {
+  // Cloudflare provides the real IP in this header
+  return (req.headers['cf-connecting-ip']
+       || req.headers['x-forwarded-for']?.split(',')[0]?.trim()
+       || req.socket?.remoteAddress
+       || 'unknown').replace(/^::ffff:/, '');
+}
+
+async function checkFreeRateLimit(ip) {
+  if (!redis) return { allowed: true, remaining: FREE_DAILY_LIMIT };
+  const key = `free:${ip}:${new Date().toISOString().slice(0, 10)}`; // free:1.2.3.4:2026-05-12
+  const count = await redis.incr(key);
+  if (count === 1) {
+    // First use today — set 24h expiration
+    await redis.expire(key, 24 * 60 * 60);
+  }
+  const remaining = Math.max(0, FREE_DAILY_LIMIT - count);
+  return { allowed: count <= FREE_DAILY_LIMIT, remaining, used: count };
+}
+
+async function checkFreeRateLimitReadOnly(ip) {
+  if (!redis) return { remaining: FREE_DAILY_LIMIT, used: 0 };
+  const key = `free:${ip}:${new Date().toISOString().slice(0, 10)}`;
+  const raw = await redis.get(key);
+  const count = raw ? parseInt(raw, 10) : 0;
+  const remaining = Math.max(0, FREE_DAILY_LIMIT - count);
+  return { remaining, used: count };
+}
+
 // ── R2 Storage ───────────────────────────────────────────────────────────
 const R2_BUCKET = process.env.R2_BUCKET;
 const r2 = (process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY && process.env.R2_ENDPOINT)
@@ -285,16 +320,24 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => cb(null, `${uuidv4()}${path.extname(file.originalname)}`)
 });
 
+const videoFileFilter = (req, file, cb) => {
+  if (/\.(r3d|braw|arri|ari|crm|cdng|dng)$/i.test(file.originalname)) {
+    return cb(new Error('Camera RAW files (R3D, BRAW, ARRIRAW) are not supported. Please transcode to ProRes, H.264, or H.265 first.'));
+  }
+  const ok = /\.(mp4|mov|mxf|avi|mkv|m4v|mts|m2ts|webm)$/i.test(file.originalname);
+  ok ? cb(null, true) : cb(new Error('Unsupported file type. Supported: MP4, MOV, MKV, AVI, MXF, WebM.'));
+};
+
 const upload = multer({
   storage,
   limits: { fileSize: MAX_FILE_MB * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (/\.(r3d|braw|arri|ari|crm|cdng|dng)$/i.test(file.originalname)) {
-      return cb(new Error('Camera RAW files (R3D, BRAW, ARRIRAW) are not supported. Please transcode to ProRes, H.264, or H.265 first.'));
-    }
-    const ok = /\.(mp4|mov|mxf|avi|mkv|m4v|mts|m2ts|webm)$/i.test(file.originalname);
-    ok ? cb(null, true) : cb(new Error('Unsupported file type. Supported: MP4, MOV, MKV, AVI, MXF, WebM.'));
-  }
+  fileFilter: videoFileFilter
+});
+
+const uploadFree = multer({
+  storage,
+  limits: { fileSize: FREE_MAX_FILE_MB * 1024 * 1024 },
+  fileFilter: videoFileFilter
 });
 
 // ── Routes ───────────────────────────────────────────────────────────────
@@ -487,6 +530,91 @@ app.post('/api/extract', (req, res) => {
   });
 });
 
+// Free tier rate-limit check (called before upload starts)
+app.get('/api/free-status', async (req, res) => {
+  const ip = getClientIp(req);
+  const { remaining, used } = await checkFreeRateLimitReadOnly(ip);
+  res.json({
+    allowed: remaining > 0,
+    remaining,
+    used,
+    dailyLimit: FREE_DAILY_LIMIT,
+    maxFileMB: FREE_MAX_FILE_MB,
+    maxDurationSeconds: FREE_MAX_DURATION,
+    outputHeight: FREE_OUTPUT_HEIGHT
+  });
+});
+
+// Free tier extraction — no payment, rate limited, 720p output
+app.post('/api/extract-free', (req, res) => {
+  uploadFree.single('video')(req, res, async (uploadErr) => {
+    if (uploadErr) {
+      return res.status(400).json({ error: uploadErr.message });
+    }
+    if (!req.file) return res.status(400).json({ error: 'No file received' });
+
+    const videoPath = req.file.path;
+    const ip = getClientIp(req);
+
+    // Rate limit check (atomic increment)
+    const { allowed, remaining } = await checkFreeRateLimit(ip);
+    if (!allowed) {
+      fs.unlink(videoPath, () => {});
+      return res.status(429).json({
+        error: `Daily free limit reached (${FREE_DAILY_LIMIT} per day). Try again tomorrow or upgrade for full-resolution downloads.`
+      });
+    }
+
+    const { format = 'jpg' } = req.body;
+
+    try {
+      // Check duration limit
+      const info = await getVideoInfo(videoPath);
+      if (info.duration > FREE_MAX_DURATION) {
+        fs.unlink(videoPath, () => {});
+        return res.status(400).json({
+          error: `Free tier supports up to ${Math.round(FREE_MAX_DURATION / 60)} minutes. Your video is ${Math.round(info.duration)}s. Upgrade for full ${Math.round(MAX_DURATION_SECONDS / 60)}-minute support.`
+        });
+      }
+
+      const jobId = uuidv4();
+      const outputDir = path.join(FRAMES_DIR, jobId);
+      fs.mkdirSync(outputDir, { recursive: true });
+
+      await acquireSlot();
+      let frameCount;
+      try {
+        // 720p output, jpg quality 88 (slightly lower than paid 95)
+        frameCount = await extractFrames(videoPath, outputDir, format, 5, 88, FREE_OUTPUT_HEIGHT);
+      } finally {
+        releaseSlot();
+      }
+
+      const originalName = path.basename(req.file.originalname, path.extname(req.file.originalname));
+      const safeName = originalName.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 80) || jobId.slice(0, 8);
+      const zipFilename = `framegrab_${safeName}_720p.zip`;
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', `attachment; filename="${zipFilename}"`);
+      res.setHeader('X-Free-Remaining', String(remaining));
+
+      const archive = archiver('zip', { zlib: { level: 1 } });
+      archive.pipe(res);
+      archive.directory(outputDir, false);
+      archive.on('error', err => console.error('Archive error:', err));
+      await archive.finalize();
+      res.on('finish', () => cleanup(videoPath, outputDir));
+      res.on('close', () => cleanup(videoPath, outputDir));
+
+    } catch (err) {
+      console.error('Free extraction error:', err);
+      cleanup(videoPath);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Processing failed. Please try again or contact support.' });
+      }
+    }
+  });
+});
+
 // ── Stripe Webhook ────────────────────────────────────────────────────────
 async function handleWebhook(req, res) {
   if (!stripe || !STRIPE_WEBHOOK_SECRET) return res.sendStatus(200);
@@ -546,7 +674,7 @@ function getVideoInfo(videoPath) {
   });
 }
 
-function extractFrames(videoPath, outputDir, format, interval, quality) {
+function extractFrames(videoPath, outputDir, format, interval, quality, maxHeight) {
   return new Promise((resolve, reject) => {
     const ext = ['png', 'webp', 'jpg'].includes(format) ? format : 'jpg';
     const outputPattern = path.join(outputDir, `frame_%05d.${ext}`);
@@ -563,9 +691,16 @@ function extractFrames(videoPath, outputDir, format, interval, quality) {
       qualityArgs.push('-pix_fmt', 'rgb24');
     }
 
+    // Build video filter: select every Nth frame, optionally scale to max height
+    let vf = `select=not(mod(n\\,${interval}))`;
+    if (maxHeight && maxHeight > 0) {
+      // -2 keeps width even and proportional; scale only if source is larger
+      vf += `,scale=-2:'min(${maxHeight},ih)'`;
+    }
+
     const args = [
       '-i', videoPath,
-      '-vf', `select=not(mod(n\\,${interval}))`,
+      '-vf', vf,
       '-vsync', 'vfr',
       ...qualityArgs,
       outputPattern
