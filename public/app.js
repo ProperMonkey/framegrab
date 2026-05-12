@@ -21,12 +21,16 @@ async function init() {
     btn.style.cursor = 'not-allowed';
   }
 
-  // Populate UI text
-  document.getElementById('heroPrice').textContent = config.priceLabel;
-  document.getElementById('payBtnPrice').textContent = config.priceLabel;
-  document.getElementById('heroMaxMb').textContent = config.maxFileMB;
-  const maxMinEl = document.getElementById('heroMaxMin');
-  if (maxMinEl) maxMinEl.textContent = Math.round(config.maxDurationSeconds / 60);
+  // Populate UI text (guarded — elements may not exist)
+  const setText = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+  setText('heroPrice', config.priceLabel);
+  setText('payBtnPrice', config.priceLabel);
+  setText('payBtnPrice2', config.priceLabel);
+  setText('heroMaxMb', config.maxFileMB);
+  setText('heroMaxMin', Math.round(config.maxDurationSeconds / 60));
 
   // Check if returning from Stripe
   const params = new URLSearchParams(window.location.search);
