@@ -89,20 +89,80 @@ try {
 
       precheckResult.classList.remove('ok', 'bad');
 
+      // Hard fails first — no point checking duration on a file that won't work
       if (RAW_EXT.includes(ext)) {
         precheckResult.classList.add('bad');
         precheckResult.innerHTML = `✗ <strong>${escapeHTML(file.name)}</strong> — ${ext.toUpperCase()} files aren't compatible. Transcode to ProRes or H.264 in your editor first, then come back.`;
-      } else if (SUPPORTED_EXT.includes(ext)) {
-        const sizeWarning = file.size > 2 * 1024 * 1024 * 1024
-          ? ` (${sizeMB}MB exceeds the 2GB limit — trim or compress)`
-          : '';
-        precheckResult.classList.add(sizeWarning ? 'bad' : 'ok');
-        precheckResult.innerHTML = sizeWarning
-          ? `✗ <strong>${escapeHTML(file.name)}</strong>${sizeWarning}`
-          : `✓ <strong>${escapeHTML(file.name)}</strong> (${sizeMB}MB) — extension looks good. Pay to upload and process.`;
-      } else {
+        return;
+      }
+      if (!SUPPORTED_EXT.includes(ext)) {
         precheckResult.classList.add('bad');
         precheckResult.innerHTML = `✗ <strong>${escapeHTML(file.name)}</strong> — not a supported video format. Supported: MP4, MOV, MKV, AVI, MXF, WebM.`;
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024 * 1024) {
+        precheckResult.classList.add('bad');
+        precheckResult.innerHTML = `✗ <strong>${escapeHTML(file.name)}</strong> (${sizeMB}MB) — exceeds the 2GB limit. Trim or compress first.`;
+        return;
+      }
+
+      // Extension and size are good — show preliminary OK then check duration
+      precheckResult.classList.add('ok');
+      precheckResult.innerHTML = `<span style="color:var(--muted)">⏳ Checking <strong>${escapeHTML(file.name)}</strong>…</span>`;
+
+      // Try to read duration metadata from the file header (purely local)
+      try {
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        const objectUrl = URL.createObjectURL(file);
+
+        const cleanup = () => URL.revokeObjectURL(objectUrl);
+        const timeout = setTimeout(() => {
+          cleanup();
+          // Browser couldn't read metadata (probably MXF or unusual codec) — fall back to extension OK
+          precheckResult.classList.remove('bad');
+          precheckResult.classList.add('ok');
+          precheckResult.innerHTML = `✓ <strong>${escapeHTML(file.name)}</strong> (${sizeMB}MB) — extension looks good. Duration couldn't be read in browser; will be verified during processing.`;
+        }, 5000);
+
+        video.onloadedmetadata = () => {
+          clearTimeout(timeout);
+          cleanup();
+          const seconds = video.duration;
+          if (!isFinite(seconds) || seconds <= 0) {
+            precheckResult.classList.remove('bad');
+            precheckResult.classList.add('ok');
+            precheckResult.innerHTML = `✓ <strong>${escapeHTML(file.name)}</strong> (${sizeMB}MB) — extension looks good. Duration couldn't be read in browser; will be verified during processing.`;
+            return;
+          }
+          const mins = Math.floor(seconds / 60);
+          const secs = Math.round(seconds % 60);
+          const durStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+          if (seconds > 300) {
+            precheckResult.classList.remove('ok');
+            precheckResult.classList.add('bad');
+            precheckResult.innerHTML = `✗ <strong>${escapeHTML(file.name)}</strong> is ${durStr} — exceeds the 5-minute limit. Trim before paying.`;
+          } else {
+            precheckResult.classList.remove('bad');
+            precheckResult.classList.add('ok');
+            precheckResult.innerHTML = `✓ <strong>${escapeHTML(file.name)}</strong> (${sizeMB}MB, ${durStr}) — looks good. Pay to upload and process.`;
+          }
+        };
+
+        video.onerror = () => {
+          clearTimeout(timeout);
+          cleanup();
+          // Couldn't decode in browser — common for MXF/ProRes. Don't block.
+          precheckResult.classList.remove('bad');
+          precheckResult.classList.add('ok');
+          precheckResult.innerHTML = `✓ <strong>${escapeHTML(file.name)}</strong> (${sizeMB}MB) — extension looks good. Duration couldn't be read in browser; will be verified during processing.`;
+        };
+
+        video.src = objectUrl;
+      } catch (e) {
+        // Total fallback — extension check passed, that's enough
+        precheckResult.classList.add('ok');
+        precheckResult.innerHTML = `✓ <strong>${escapeHTML(file.name)}</strong> (${sizeMB}MB) — extension looks good. Pay to upload and process.`;
       }
     });
   }
