@@ -162,7 +162,7 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
   formData.append('sessionId', sessionId);
   formData.append('format', selectedFormat);
   formData.append('quality', qualitySlider.value);
-  formData.append('interval', '15');
+  formData.append('interval', '5');
 
   try {
     // Switch message after upload completes to indicate queued state

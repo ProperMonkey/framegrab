@@ -316,7 +316,10 @@ app.post('/api/extract', (req, res) => {
         releaseSlot();
       }
 
-      const zipFilename = `framegrab_${jobId.slice(0, 8)}.zip`;
+      // Build ZIP filename from original video name
+      const originalName = path.basename(req.file.originalname, path.extname(req.file.originalname));
+      const safeName = originalName.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 80) || jobId.slice(0, 8);
+      const zipFilename = `framegrab_${safeName}.zip`;
       res.setHeader('Content-Type', 'application/zip');
       res.setHeader('Content-Disposition', `attachment; filename="${zipFilename}"`);
 
