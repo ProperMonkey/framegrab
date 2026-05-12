@@ -103,30 +103,45 @@ async function restoreSession(id) {
   }
 }
 
-// ── Concurrency limiter ──────────────────────────────────────────────────
+// ── Concurrency limiter (paid users get queue priority) ──────────────────
 const MAX_CONCURRENT_JOBS = parseInt(process.env.MAX_CONCURRENT_JOBS || '8', 10);
 let activeJobs = 0;
-const jobQueue = [];
+const paidQueue = [];
+const freeQueue = [];
 
-function acquireSlot() {
+function acquireSlot(priority = 'paid') {
   return new Promise(resolve => {
     if (activeJobs < MAX_CONCURRENT_JOBS) {
       activeJobs++;
       resolve();
     } else {
-      jobQueue.push(resolve);
+      // Paid users jump ahead of free users in the queue
+      if (priority === 'free') {
+        freeQueue.push(resolve);
+      } else {
+        paidQueue.push(resolve);
+      }
     }
   });
 }
 
 function releaseSlot() {
-  if (jobQueue.length > 0) {
-    const next = jobQueue.shift();
+  // Always serve paid queue first
+  if (paidQueue.length > 0) {
+    const next = paidQueue.shift();
+    next();
+  } else if (freeQueue.length > 0) {
+    const next = freeQueue.shift();
     next();
   } else {
     activeJobs--;
   }
 }
+
+// Combined queue length for status reporting
+const jobQueue = {
+  get length() { return paidQueue.length + freeQueue.length; }
+};
 
 // ── Free tier rate limiting ──────────────────────────────────────────────
 const FREE_DAILY_LIMIT = parseInt(process.env.FREE_DAILY_LIMIT || '3', 10);
@@ -581,7 +596,7 @@ app.post('/api/extract-free', (req, res) => {
       const outputDir = path.join(FRAMES_DIR, jobId);
       fs.mkdirSync(outputDir, { recursive: true });
 
-      await acquireSlot();
+      await acquireSlot('free'); // Free tier gets lower queue priority
       let frameCount;
       try {
         // 720p output, jpg quality 88 (slightly lower than paid 95)
