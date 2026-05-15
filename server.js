@@ -216,7 +216,7 @@ const MAX_DURATION_SECONDS = parseInt(process.env.MAX_DURATION_SECONDS || '300',
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const MAINTENANCE_MODE = process.env.MAINTENANCE_MODE === 'true';
-const ALERT_EMAIL = process.env.ALERT_EMAIL || 'TechnicianFilms@gmail.com';
+const ALERT_EMAIL = process.env.ALERT_EMAIL || 'framegrabsupport@gmail.com';
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD;
 
 // ── Email alerter ────────────────────────────────────────────────────────

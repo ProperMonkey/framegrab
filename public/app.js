@@ -71,7 +71,7 @@ async function verifyAndShowUpload(sid) {
   }
 
   showView('landing');
-  showToast('Payment could not be verified. If you were charged, please contact support at TechnicianFilms@gmail.com');
+  showToast('Payment could not be verified. If you were charged, please contact support at framegrabsupport@gmail.com');
 }
 
 // ── Pre-pay compatibility check (optional, filename-only) ────────────────
