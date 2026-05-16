@@ -74,6 +74,42 @@ async function verifyAndShowUpload(sid) {
   showToast('Payment could not be verified. If you were charged, please contact support at framegrabsupport@gmail.com');
 }
 
+// ── Mobile save-for-later banner ──────────────────────────────────────────
+try {
+  const banner = document.getElementById('mobileSaveBanner');
+  const saveBtn = document.getElementById('mobileSaveBtn');
+  const closeBtn = document.getElementById('mobileSaveClose');
+
+  if (banner && saveBtn && closeBtn) {
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const hasShare = typeof navigator.share === 'function';
+    const dismissed = sessionStorage.getItem('mobileBannerDismissed') === '1';
+
+    if (isMobile && hasShare && !dismissed) {
+      banner.classList.remove('hidden');
+
+      saveBtn.addEventListener('click', async () => {
+        try {
+          await navigator.share({
+            title: 'FrameGrab — extract video stills',
+            text: 'Pull this up when I have video files on my laptop',
+            url: 'https://framegrab.net'
+          });
+        } catch (_) {
+          // User cancelled share sheet — no action needed
+        }
+      });
+
+      closeBtn.addEventListener('click', () => {
+        banner.classList.add('hidden');
+        try { sessionStorage.setItem('mobileBannerDismissed', '1'); } catch (_) {}
+      });
+    }
+  }
+} catch (e) {
+  console.warn('Mobile banner init failed (non-fatal):', e);
+}
+
 // ── Pre-pay compatibility check (optional, filename-only) ────────────────
 try {
   const SUPPORTED_EXT = ['mp4', 'mov', 'mkv', 'avi', 'mxf', 'webm', 'm4v', 'mts', 'm2ts'];
