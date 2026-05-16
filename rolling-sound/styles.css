@@ -1,9 +1,5 @@
 /* ─── Reset ─────────────────────────────────────────────────────────────── */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 /* ─── Variables ──────────────────────────────────────────────────────────── */
 :root {
@@ -12,6 +8,8 @@
   --muted: #5A5A5A;
   --accent: #E8A33D;
   --rule: #1F1F1F;
+  --rule-mid: #2C2C2C;
+  --surface: #111111;
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */
@@ -21,30 +19,16 @@ html {
   background: var(--bg);
   color: var(--fg);
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-body {
-  background: var(--bg);
-  min-height: 100vh;
-}
+body { background: var(--bg); }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-img {
-  display: block;
-  max-width: 100%;
-}
+a { color: inherit; text-decoration: none; }
 
 /* ─── Utility ────────────────────────────────────────────────────────────── */
-.hidden {
-  display: none !important;
-}
+.hidden { display: none !important; }
 
 /* ─── Container ──────────────────────────────────────────────────────────── */
 .container {
@@ -53,36 +37,56 @@ img {
   padding: 0 48px;
 }
 
-/* ─── Section rule ───────────────────────────────────────────────────────── */
+/* ─── Section grid ────────────────────────────────────────────────────────── */
+.section-grid {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  align-items: start;
+}
+
+.sec-num-col { padding-top: 2px; }
+
+.sec-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--accent);
+  letter-spacing: 0.14em;
+  display: block;
+}
+
+/* ─── Section label ──────────────────────────────────────────────────────── */
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 400;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.16em;
+  margin-bottom: 48px;
+  display: block;
+}
+
+/* ─── Dividers ───────────────────────────────────────────────────────────── */
 hr.section-rule {
   border: none;
   border-top: 1px solid var(--rule);
   margin: 0;
 }
 
-/* ─── Section label ──────────────────────────────────────────────────────── */
-.section-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  font-weight: 400;
-  text-transform: uppercase;
-  color: var(--muted);
-  letter-spacing: 0.12em;
-  margin-bottom: 56px;
-  display: block;
+hr.use-rule {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: 0;
 }
 
-.section-label .label-num {
-  color: var(--accent);
-}
-
-/* ─── Mono caption (reusable) ────────────────────────────────────────────── */
-.mono-caption {
+/* ─── Mono ───────────────────────────────────────────────────────────────── */
+.mono {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 400;
   color: var(--muted);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
 /* ─── Header ─────────────────────────────────────────────────────────────── */
@@ -92,10 +96,10 @@ hr.section-rule {
   z-index: 100;
   width: 100%;
   height: 64px;
+  background: rgba(10, 10, 10, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--rule);
-  background: rgba(10, 10, 10, 0.8);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .header-inner {
@@ -110,107 +114,110 @@ hr.section-rule {
 
 .wordmark {
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--fg);
-  text-decoration: none;
-}
-
-.wordmark:hover {
   color: var(--fg);
 }
 
 .site-nav {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 20px;
 }
 
 .site-nav a {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 400;
   text-transform: uppercase;
   color: var(--muted);
-  letter-spacing: 0.1em;
-  text-decoration: none;
-  transition: color 0.15s ease;
+  letter-spacing: 0.16em;
+  transition: color 0.15s;
 }
 
 .site-nav a:hover {
   color: var(--accent);
   text-decoration: underline;
   text-decoration-color: var(--accent);
-  text-underline-offset: 3px;
+  text-underline-offset: 4px;
 }
 
 .nav-dot {
-  color: #3A3A3A;
-  font-family: 'JetBrains Mono', monospace;
+  color: var(--rule-mid);
   font-size: 14px;
   user-select: none;
 }
 
-/* ─── Hero ───────────────────────────────────────────────────────────────── */
+/* ─── Hero (full viewport) ───────────────────────────────────────────────── */
 .hero {
-  padding-top: 160px;
-  padding-bottom: 120px;
+  min-height: calc(100vh - 64px);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.hero .container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+
+.hero-content {
+  padding-top: 96px;
+  padding-bottom: 56px;
 }
 
 .hero-headline {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 72px;
-  font-weight: 600;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
+  font-size: clamp(56px, 10vw, 132px);
+  font-weight: 700;
+  line-height: 0.94;
+  letter-spacing: -0.035em;
   color: var(--fg);
-  max-width: 800px;
+  margin-bottom: 28px;
 }
 
 .hero-sub {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 20px;
-  font-weight: 400;
-  color: var(--muted);
-  margin-top: 24px;
-  line-height: 1.5;
-}
-
-.hero-image-wrap {
-  margin-top: 80px;
-}
-
-.hero-image-placeholder {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  min-height: 400px;
-  background: #1A1A1A;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.hero-image-label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 400;
   color: var(--muted);
   letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
-.hero-caption {
-  margin-top: 16px;
+/* Image fills remaining viewport space */
+.hero-image-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.hero-image-placeholder {
+  flex: 1;
+  min-height: 240px;
+  width: 100%;
+  background: #131313;
+  border: 1px solid var(--rule-mid);
+  border-bottom: none;
+  display: flex;
+  align-items: flex-end;
+  padding: 18px 24px;
+}
+
+.hero-image-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
 }
 
 /* ─── Sections ───────────────────────────────────────────────────────────── */
-.section {
-  padding-block: 120px;
-}
+.section { padding-block: 120px; }
 
-/* ─── Section 01 — THE RIG ───────────────────────────────────────────────── */
+/* ─── 01 — THE RIG ───────────────────────────────────────────────────────── */
 .rig-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -220,122 +227,108 @@ hr.section-rule {
 
 .rig-specs {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.8;
-  color: var(--fg);
+  font-size: 13px;
+  line-height: 1.7;
 }
 
 .spec-row {
   display: grid;
-  grid-template-columns: 120px 1fr;
-  gap: 0;
-  margin-bottom: 32px;
+  grid-template-columns: 96px 1fr;
+  border-top: 1px solid var(--rule);
+  padding: 18px 0;
 }
 
-.spec-row:last-child {
-  margin-bottom: 0;
-}
+.spec-row:last-child { border-bottom: 1px solid var(--rule); }
 
 .spec-category {
   color: var(--accent);
+  font-size: 10px;
   font-weight: 500;
-  padding-top: 0;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding-top: 2px;
 }
 
-.spec-text {
-  color: var(--fg);
-}
+.spec-text { color: var(--fg); }
 
 .rig-prose {
-  font-size: 18px;
-  line-height: 1.6;
+  font-size: 19px;
+  line-height: 1.65;
   color: var(--fg);
 }
 
 .rig-prose p + p {
-  margin-top: 24px;
+  margin-top: 28px;
+  color: var(--muted);
+  font-size: 17px;
 }
 
-/* ─── Narrow content blocks (left-aligned within the 1200px container) ───── */
-.content-narrow {
-  max-width: 800px;
+/* ─── 02 — WHAT IT'S FOR ─────────────────────────────────────────────────── */
+.section--what {
+  background: var(--surface);
 }
 
-.content-tight {
-  max-width: 600px;
-}
+.section--what .section-body { max-width: none; }
 
-/* ─── Section 02 — WHAT IT'S FOR ─────────────────────────────────────────── */
-
-.use-list {
-  margin-bottom: 48px;
-}
+.use-list { margin-bottom: 40px; }
 
 .use-item {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 32px;
+  font-size: clamp(44px, 7.5vw, 92px);
   font-weight: 400;
-  line-height: 1.4;
+  line-height: 1.1;
   color: var(--fg);
-  padding: 28px 0;
+  letter-spacing: -0.02em;
+  padding: 24px 0;
 }
 
-hr.use-rule {
-  border: none;
-  border-top: 1px solid var(--rule);
-  margin: 0;
-}
+.use-caption { margin-top: 0; }
 
-.use-caption {
-  margin-top: 0;
-}
+/* ─── 03 — SERVICE ───────────────────────────────────────────────────────── */
+.section--service .section-body { max-width: 900px; }
 
-/* ─── Section 03 — SERVICE ───────────────────────────────────────────────── */
-.prose--lg {
-  font-size: 20px;
+.service-lead {
+  font-size: 16px;
   line-height: 1.6;
-  color: var(--fg);
-}
-
-.prose--lg p + p {
-  margin-top: 24px;
-}
-
-/* ─── Section 04 — BEHIND IT ─────────────────────────────────────────────── */
-.prose {
-  font-size: 18px;
-  line-height: 1.7;
-  color: var(--fg);
-}
-
-.prose p + p {
-  margin-top: 24px;
-}
-
-/* ─── Section 05 — BOOKING ───────────────────────────────────────────────── */
-
-/* Form */
-#booking-form {
+  color: var(--muted);
   margin-bottom: 0;
 }
+
+.prose-pull {
+  font-size: clamp(30px, 3.5vw, 46px);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  color: var(--fg);
+  padding-top: 48px;
+  margin-top: 48px;
+  border-top: 1px solid var(--rule);
+}
+
+/* ─── 04 — BEHIND IT ─────────────────────────────────────────────────────── */
+.section--behind .section-body { max-width: 620px; }
+
+.prose {
+  font-size: 19px;
+  line-height: 1.8;
+  color: var(--fg);
+}
+
+/* ─── 05 — BOOKING ───────────────────────────────────────────────────────── */
+.section--booking .section-body { max-width: 560px; }
 
 .form-field {
   display: flex;
   flex-direction: column;
-  margin-bottom: 40px;
+  margin-bottom: 36px;
 }
 
 .form-field label {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.16em;
   color: var(--muted);
-  margin-bottom: 0;
-  display: block;
 }
 
 .form-field input,
@@ -343,113 +336,92 @@ hr.use-rule {
 .form-field textarea {
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--muted);
+  border-bottom: 1px solid var(--rule-mid);
   border-radius: 0;
-  padding: 12px 0;
+  padding: 14px 0;
   color: var(--fg);
   font-family: 'Inter', system-ui, sans-serif;
   font-size: 16px;
-  font-weight: 400;
   width: 100%;
   outline: none;
   -webkit-appearance: none;
   appearance: none;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.2s;
 }
 
 .form-field input::placeholder,
-.form-field textarea::placeholder {
-  color: var(--muted);
-  opacity: 1;
-}
+.form-field textarea::placeholder { color: #333; }
 
 .form-field input:focus,
 .form-field select:focus,
-.form-field textarea:focus {
-  border-bottom-color: var(--accent);
-}
+.form-field textarea:focus { border-bottom-color: var(--accent); }
 
-.form-field textarea {
-  resize: vertical;
-  min-height: 96px;
-}
+.form-field textarea { resize: vertical; min-height: 88px; }
 
-/* Select wrapper + arrow indicator */
-.form-field--select {
-  position: relative;
-}
+.form-field--select { position: relative; }
 
 .form-field--select::after {
   content: '▾';
   position: absolute;
   right: 0;
-  bottom: 14px;
+  bottom: 16px;
   color: var(--muted);
   pointer-events: none;
-  font-size: 12px;
+  font-size: 11px;
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* Input date color fix */
 input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(0.35);
+  filter: invert(0.28);
   cursor: pointer;
 }
 
-/* Submit button */
 .submit-btn {
-  margin-top: 32px;
+  margin-top: 40px;
   background: none;
   border: none;
   padding: 0;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  font-weight: 400;
+  font-size: 12px;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.2em;
   color: var(--fg);
   cursor: pointer;
-  display: inline-block;
-  transition: color 0.15s ease;
-  text-decoration: none;
+  transition: color 0.15s;
 }
 
 .submit-btn:hover {
   color: var(--accent);
   text-decoration: underline;
   text-decoration-color: var(--accent);
-  text-underline-offset: 3px;
+  text-underline-offset: 4px;
 }
 
-/* Form success */
 .form-success {
-  font-family: 'Inter', system-ui, sans-serif;
   font-size: 18px;
-  font-weight: 400;
-  color: var(--fg);
   line-height: 1.6;
-  padding: 24px 0;
+  color: var(--fg);
+  padding: 20px 0;
 }
 
-/* Booking footer */
 .booking-footer {
-  margin-top: 48px;
-  font-family: 'Inter', system-ui, sans-serif;
+  margin-top: 56px;
+  padding-top: 32px;
+  border-top: 1px solid var(--rule);
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.7;
   color: var(--muted);
 }
 
-.booking-footer p + p {
-  margin-top: 12px;
-}
+.booking-footer p + p { margin-top: 8px; }
 
 .booking-footer a {
   color: var(--muted);
   text-decoration: underline;
-  text-decoration-color: var(--muted);
-  text-underline-offset: 2px;
-  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+  text-decoration-color: var(--rule-mid);
+  text-underline-offset: 3px;
+  transition: color 0.15s, text-decoration-color 0.15s;
 }
 
 .booking-footer a:hover {
@@ -458,121 +430,65 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 /* ─── Footer ─────────────────────────────────────────────────────────────── */
-.site-footer {
-  border-top: 1px solid var(--rule);
-  margin-top: 0;
-}
+.site-footer { border-top: 1px solid var(--rule); }
 
 .footer-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 48px;
+  padding: 28px 48px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  font-weight: 400;
   color: var(--muted);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
 }
 
-/* ─── Mobile ─────────────────────────────────────────────────────────────── */
-@media (max-width: 767px) {
-  .container {
-    padding: 0 24px;
-  }
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .section-grid { grid-template-columns: 64px 1fr; }
+}
 
-  .header-inner {
-    padding: 0 24px;
-  }
+@media (max-width: 767px) {
+  .container { padding: 0 24px; }
+  .header-inner { padding: 0 24px; }
 
   /* Hero */
-  .hero {
-    padding-top: 96px;
-    padding-bottom: 64px;
-  }
-
-  .hero-headline {
-    font-size: 40px;
-  }
-
-  .hero-sub {
-    font-size: 16px;
-    margin-top: 20px;
-  }
-
-  .hero-image-wrap {
-    margin-top: 56px;
-  }
-
-  .hero-image-placeholder {
-    aspect-ratio: 4 / 3;
-    min-height: 0;
-  }
+  .hero { min-height: 0; }
+  .hero .container { flex: none; }
+  .hero-content { padding-top: 72px; padding-bottom: 40px; }
+  .hero-headline { font-size: clamp(42px, 11vw, 64px); line-height: 0.97; margin-bottom: 20px; }
+  .hero-image-wrap { flex: none; }
+  .hero-image-placeholder { min-height: 56vw; aspect-ratio: 4/3; flex: none; border-bottom: 1px solid var(--rule-mid); }
 
   /* Sections */
-  .section {
-    padding-block: 64px;
-  }
+  .section { padding-block: 64px; }
+  .section-grid { grid-template-columns: 1fr; }
+  .sec-num-col { margin-bottom: 6px; }
+  .section-label { margin-bottom: 28px; }
 
-  .section-label {
-    margin-bottom: 40px;
-  }
+  /* Rig */
+  .rig-grid { grid-template-columns: 1fr; gap: 36px; }
+  .spec-row { grid-template-columns: 72px 1fr; }
 
-  /* Section 01 rig grid — stack */
-  .rig-grid {
-    grid-template-columns: 1fr;
-    gap: 48px;
-  }
+  /* What it's for */
+  .section--what { background: var(--surface); }
+  .use-item { font-size: clamp(32px, 9vw, 52px); padding: 18px 0; }
 
-  .spec-row {
-    grid-template-columns: 80px 1fr;
-  }
-
-  /* Section 02 use items */
-  .use-item {
-    font-size: 22px;
-    padding: 20px 0;
-  }
+  /* Service */
+  .prose-pull { font-size: clamp(24px, 6vw, 34px); padding-top: 32px; margin-top: 32px; }
 
   /* Footer */
-  .footer-inner {
-    padding: 32px 24px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
+  .footer-inner { padding: 24px; flex-direction: column; align-items: flex-start; gap: 10px; }
 }
 
 /* ─── Print ──────────────────────────────────────────────────────────────── */
 @media print {
-  .site-header {
-    position: static;
-    background: #fff;
-    border-bottom: 1px solid #ccc;
-  }
-
-  body, html {
-    background: #fff;
-    color: #111;
-  }
-
-  :root {
-    --bg: #fff;
-    --fg: #111;
-    --muted: #555;
-    --accent: #B8821E;
-    --rule: #ddd;
-  }
-
-  .hero-image-placeholder {
-    background: #eee;
-    border: 1px solid #ccc;
-  }
-
-  .hero-image-label {
-    color: #555;
-  }
+  html, body { background: #fff; color: #111; }
+  :root { --bg: #fff; --fg: #111; --muted: #555; --rule: #ccc; --rule-mid: #ccc; --surface: #f5f5f5; }
+  .site-header { position: static; background: #fff; }
+  .hero { min-height: 0; }
+  .hero-image-placeholder { background: #eee; min-height: 300px; }
 }
