@@ -83,11 +83,39 @@
 
   <div class="page">
 
-    <!-- Mobile save-for-later banner (shown on mobile only if Web Share API supported) -->
+    <!-- Mobile save-for-later banner (shown on mobile only) -->
     <div id="mobileSaveBanner" class="mobile-banner hidden">
       <span class="mobile-banner-text">📱 On your phone? Save this for when you're at your laptop.</span>
-      <button id="mobileSaveBtn" class="mobile-banner-btn">Save for later</button>
+      <button id="mobileSaveBtn" class="mobile-banner-btn">Save it</button>
       <button id="mobileSaveClose" class="mobile-banner-close" aria-label="Dismiss">×</button>
+    </div>
+
+    <!-- Save-for-later options modal -->
+    <div id="saveModal" class="save-modal hidden" role="dialog" aria-label="Save for later options">
+      <div class="save-modal-backdrop" id="saveModalBackdrop"></div>
+      <div class="save-modal-panel">
+        <button id="saveModalClose" class="save-modal-x" aria-label="Close">×</button>
+        <div class="save-modal-title">Send framegrab.net to yourself</div>
+        <div class="save-modal-sub">Pick whichever's easiest:</div>
+        <div class="save-modal-options">
+          <button id="optShare" class="save-opt hidden">
+            <span class="save-opt-icon">📤</span>
+            <span class="save-opt-label">Share <span class="save-opt-sub">(AirDrop, Messages, more)</span></span>
+          </button>
+          <button id="optEmail" class="save-opt">
+            <span class="save-opt-icon">✉️</span>
+            <span class="save-opt-label">Email it to me <span class="save-opt-sub">(opens your mail app)</span></span>
+          </button>
+          <button id="optSMS" class="save-opt">
+            <span class="save-opt-icon">💬</span>
+            <span class="save-opt-label">Text it to me <span class="save-opt-sub">(opens Messages)</span></span>
+          </button>
+          <button id="optCopy" class="save-opt">
+            <span class="save-opt-icon">📋</span>
+            <span class="save-opt-label">Copy the link <span class="save-opt-sub">(paste anywhere)</span></span>
+          </button>
+        </div>
+      </div>
     </div>
 
     <nav class="nav">

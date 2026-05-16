@@ -74,40 +74,93 @@ async function verifyAndShowUpload(sid) {
   showToast('Payment could not be verified. If you were charged, please contact support at framegrabsupport@gmail.com');
 }
 
-// ── Mobile save-for-later banner ──────────────────────────────────────────
+// ── Mobile save-for-later banner + options modal ─────────────────────────
 try {
   const banner = document.getElementById('mobileSaveBanner');
   const saveBtn = document.getElementById('mobileSaveBtn');
   const closeBtn = document.getElementById('mobileSaveClose');
+  const modal = document.getElementById('saveModal');
+  const modalBackdrop = document.getElementById('saveModalBackdrop');
+  const modalClose = document.getElementById('saveModalClose');
+  const optShare = document.getElementById('optShare');
+  const optEmail = document.getElementById('optEmail');
+  const optSMS = document.getElementById('optSMS');
+  const optCopy = document.getElementById('optCopy');
+
+  const SAVE_URL = 'https://framegrab.net';
+  const SAVE_MESSAGE = "Save this for when I'm at my laptop — extract video stills: " + SAVE_URL;
+  const SAVE_SUBJECT = 'FrameGrab — save for later';
+
+  const openModal = () => modal && modal.classList.remove('hidden');
+  const closeModal = () => modal && modal.classList.add('hidden');
 
   if (banner && saveBtn && closeBtn) {
     const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    const hasShare = typeof navigator.share === 'function';
     const dismissed = sessionStorage.getItem('mobileBannerDismissed') === '1';
 
-    if (isMobile && hasShare && !dismissed) {
+    if (isMobile && !dismissed) {
       banner.classList.remove('hidden');
 
-      saveBtn.addEventListener('click', async () => {
-        try {
-          await navigator.share({
-            title: 'FrameGrab — extract video stills',
-            text: 'Pull this up when I have video files on my laptop',
-            url: 'https://framegrab.net'
-          });
-        } catch (_) {
-          // User cancelled share sheet — no action needed
-        }
-      });
-
+      saveBtn.addEventListener('click', openModal);
       closeBtn.addEventListener('click', () => {
         banner.classList.add('hidden');
         try { sessionStorage.setItem('mobileBannerDismissed', '1'); } catch (_) {}
       });
     }
   }
+
+  if (modalBackdrop) modalBackdrop.addEventListener('click', closeModal);
+  if (modalClose) modalClose.addEventListener('click', closeModal);
+
+  // Native share — only show if supported
+  if (optShare && typeof navigator.share === 'function') {
+    optShare.classList.remove('hidden');
+    optShare.addEventListener('click', async () => {
+      try {
+        await navigator.share({
+          title: 'FrameGrab — extract video stills',
+          text: SAVE_MESSAGE,
+          url: SAVE_URL
+        });
+        closeModal();
+      } catch (_) { /* user cancelled */ }
+    });
+  }
+
+  if (optEmail) {
+    optEmail.addEventListener('click', () => {
+      window.location.href = `mailto:?subject=${encodeURIComponent(SAVE_SUBJECT)}&body=${encodeURIComponent(SAVE_MESSAGE)}`;
+      closeModal();
+    });
+  }
+
+  if (optSMS) {
+    optSMS.addEventListener('click', () => {
+      // iOS uses sms:&body=, Android uses sms:?body= — sms:?body= works on both modern devices
+      window.location.href = `sms:?&body=${encodeURIComponent(SAVE_MESSAGE)}`;
+      closeModal();
+    });
+  }
+
+  if (optCopy) {
+    optCopy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(SAVE_URL);
+        showToast('Link copied — paste it wherever you\'ll see it later.');
+      } catch (_) {
+        // Fallback: select and copy via temporary input
+        const tmp = document.createElement('input');
+        tmp.value = SAVE_URL;
+        document.body.appendChild(tmp);
+        tmp.select();
+        try { document.execCommand('copy'); showToast('Link copied!'); } catch (_) {}
+        document.body.removeChild(tmp);
+      }
+      closeModal();
+    });
+  }
 } catch (e) {
-  console.warn('Mobile banner init failed (non-fatal):', e);
+  console.warn('Save-for-later init failed (non-fatal):', e);
 }
 
 // ── Pre-pay compatibility check (optional, filename-only) ────────────────
