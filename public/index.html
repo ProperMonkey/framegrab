@@ -1,453 +1,447 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Undertow Sound — Mobile PA for Rooms That Give a Damn</title>
+<meta name="description" content="Undertow Sound. Mobile PA hire built for DJs, DnB nights, and EDM events where the sound actually matters. BassBoss-equipped, trailer-mobile, NC / Southeast." />
+<meta property="og:title" content="Undertow Sound — Mobile PA for Picky Crowds" />
+<meta property="og:description" content="BassBoss-equipped mobile PA. Built for 100–200 cap rooms where the low end has to work. NC / Southeast." />
+<meta property="og:type" content="website" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg:#06080c;
+  --bg-2:#0a0e15;
+  --panel:#0c1119;
+  --ink:#eef2f7;
+  --muted:#8a97a8;
+  --dim:#4d5a6b;
+  --line:rgba(120,150,190,0.12);
+  /* electric blue / teal accent — subwoofer LED against near-black */
+  --acc:#1fd2ff;
+  --acc-deep:#0a8fc7;
+  --acc-glow:rgba(31,210,255,0.30);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Barlow Condensed',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  line-height:1.4;
+}
+/* atmospheric base glow */
+body::before{
+  content:"";
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(900px 500px at 78% -8%, rgba(31,210,255,0.10), transparent 60%),
+    radial-gradient(700px 600px at 8% 108%, rgba(10,143,199,0.08), transparent 60%);
+}
+/* fine grain */
+body::after{
+  content:"";
+  position:fixed; inset:0; z-index:0; pointer-events:none; opacity:0.04;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+main,header,footer{position:relative;z-index:1}
+a{color:inherit;text-decoration:none}
 
-  <!-- Primary SEO -->
-  <title>FrameGrab — Extract Still Frames from Any Video | $1.99</title>
-  <meta name="description" content="Upload any video and instantly download portfolio-ready still frames as a ZIP. Supports MP4, MOV, ProRes, MKV, AVI, MXF and more. Original resolution. $1.99 flat — no account needed." />
-  <meta name="keywords" content="extract frames from video, video to images, video still frames, portfolio stills from video, frame extraction tool, cinematographer portfolio, video frame extractor, MP4 to JPG, ProRes stills, 4K still frames" />
-  <link rel="canonical" href="https://framegrab.net" />
+/* ══════ NAV ══════ */
+.nav{
+  position:sticky; top:0; z-index:50;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 36px;
+  backdrop-filter:blur(12px);
+  background:linear-gradient(180deg, rgba(6,8,12,0.92), rgba(6,8,12,0.55));
+  border-bottom:1px solid var(--line);
+}
+.nav-logo{
+  font-weight:800; font-size:20px; letter-spacing:0.22em; text-transform:uppercase;
+}
+.nav-logo em{color:var(--acc); font-style:normal}
+.nav-links{display:flex; gap:30px; list-style:none}
+.nav-links a{
+  font-family:'JetBrains Mono',monospace; font-size:11px;
+  text-transform:uppercase; letter-spacing:0.14em; color:var(--muted);
+  transition:color .25s;
+}
+.nav-links a:hover{color:var(--acc)}
+.nav-cta{
+  font-family:'JetBrains Mono',monospace; font-size:11px;
+  text-transform:uppercase; letter-spacing:0.12em;
+  border:1px solid var(--acc); color:var(--acc);
+  padding:9px 16px; transition:all .25s;
+}
+.nav-cta:hover{background:var(--acc); color:#03121a; box-shadow:0 0 24px var(--acc-glow)}
+@media(max-width:760px){
+  .nav{padding:16px 20px}
+  .nav-links{display:none}
+}
 
-  <!-- Open Graph (Facebook, LinkedIn) -->
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://framegrab.net" />
-  <meta property="og:title" content="FrameGrab — Extract Still Frames from Any Video" />
-  <meta property="og:description" content="Drop any video, get a full set of portfolio-ready stills in seconds. Supports 4K, ProRes, MP4, MOV and more. $1.99 flat, no account needed." />
-  <meta property="og:image" content="https://framegrab-production.up.railway.app/og-image.png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="FrameGrab — Portfolio-ready stills from any video, instantly. $1.99 flat." />
-  <meta property="og:site_name" content="FrameGrab" />
+/* ══════ HERO ══════ */
+.hero{
+  position:relative;
+  padding:120px 36px 96px;
+  min-height:88vh;
+  display:flex; flex-direction:column; justify-content:center;
+  overflow:hidden;
+}
+.hero-wm{
+  position:absolute; top:46%; left:50%;
+  transform:translate(-50%,-50%);
+  font-weight:900; letter-spacing:-0.02em;
+  font-size:clamp(90px,21vw,340px);
+  color:transparent;
+  -webkit-text-stroke:1px rgba(120,150,190,0.07);
+  white-space:nowrap; user-select:none; pointer-events:none; z-index:0;
+}
+.hero>*{position:relative; z-index:1}
+.hero-meta{display:flex; flex-wrap:wrap; gap:9px; margin-bottom:30px}
+.pill{
+  font-family:'JetBrains Mono',monospace; font-size:10px;
+  text-transform:uppercase; letter-spacing:0.14em; color:var(--muted);
+  border:1px solid var(--line); padding:7px 12px; border-radius:2px;
+}
+.pill.live{color:var(--acc); border-color:rgba(31,210,255,0.4)}
+.pill.live::before{
+  content:""; display:inline-block; width:6px; height:6px; border-radius:50%;
+  background:var(--acc); margin-right:7px; transform:translateY(-1px);
+  box-shadow:0 0 8px var(--acc); animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hero-h1{
+  font-weight:900; line-height:0.86; letter-spacing:-0.01em;
+  font-size:clamp(64px,13vw,168px);
+  text-transform:uppercase;
+}
+.hero-h1 .block{display:inline-block}
+.hero-h1 .acc{
+  color:var(--acc);
+  text-shadow:0 0 44px var(--acc-glow);
+}
+.hero-p{
+  margin-top:34px; max-width:540px;
+  font-size:20px; line-height:1.6; color:var(--muted); font-weight:400;
+}
+.hero-p strong{color:var(--ink); font-weight:600}
+.hero-actions{display:flex; flex-wrap:wrap; gap:14px; margin-top:38px}
+.btn{
+  font-family:'JetBrains Mono',monospace; font-size:12px;
+  text-transform:uppercase; letter-spacing:0.12em;
+  padding:14px 24px; transition:all .25s;
+}
+.btn-pri{background:var(--acc); color:#03121a; font-weight:700}
+.btn-pri:hover{box-shadow:0 0 30px var(--acc-glow); transform:translateY(-2px)}
+.btn-sec{border:1px solid var(--line); color:var(--muted)}
+.btn-sec:hover{border-color:var(--acc); color:var(--acc)}
 
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="FrameGrab — Extract Still Frames from Any Video" />
-  <meta name="twitter:description" content="Drop any video, get a full set of portfolio-ready stills in seconds. $1.99 flat, no account needed." />
-  <meta name="twitter:image" content="https://framegrab-production.up.railway.app/og-image.png" />
+/* ══════ STATS BAR ══════ */
+.stats{
+  display:grid; grid-template-columns:repeat(4,1fr);
+  border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(12,17,25,0.6), transparent);
+}
+.stat{padding:34px 30px; border-right:1px solid var(--line)}
+.stat:last-child{border-right:none}
+.stat-n{
+  font-weight:800; font-size:clamp(34px,5vw,54px);
+  color:var(--ink); line-height:1;
+}
+.stat-n em{color:var(--acc); font-style:normal; font-size:0.55em; margin-left:2px}
+.stat-l{
+  font-family:'JetBrains Mono',monospace; font-size:10px;
+  text-transform:uppercase; letter-spacing:0.14em; color:var(--dim);
+  margin-top:12px;
+}
+@media(max-width:760px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .stat:nth-child(2){border-right:none}
+  .stat{border-bottom:1px solid var(--line)}
+}
 
-  <!-- Schema.org structured data -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "FrameGrab",
-    "url": "https://framegrab.net",
-    "description": "Extract portfolio-ready still frames from any video file. Supports MP4, MOV, ProRes, MKV, AVI, MXF and more. Download as ZIP at original resolution.",
-    "applicationCategory": "MultimediaApplication",
-    "operatingSystem": "Web",
-    "offers": {
-      "@type": "Offer",
-      "price": "1.99",
-      "priceCurrency": "USD"
-    },
-    "creator": {
-      "@type": "Organization",
-      "name": "FrameGrab",
-      "url": "https://framegrab.net"
-    }
-  }
-  </script>
+/* ══════ SECTION SHELL ══════ */
+.section{padding:96px 36px; max-width:1200px; margin:0 auto}
+.eyebrow{
+  font-family:'JetBrains Mono',monospace; font-size:11px;
+  text-transform:uppercase; letter-spacing:0.2em; color:var(--acc);
+  margin-bottom:18px; display:flex; align-items:center; gap:12px;
+}
+.eyebrow::before{content:""; width:28px; height:1px; background:var(--acc)}
+.h2{
+  font-weight:800; font-size:clamp(40px,6vw,76px);
+  text-transform:uppercase; line-height:0.95; letter-spacing:-0.01em;
+}
+.lead{
+  margin-top:24px; max-width:620px; font-size:19px;
+  color:var(--muted); font-weight:400; line-height:1.6;
+}
+@media(max-width:760px){.section{padding:72px 20px}}
 
-  <!-- FAQ structured data for rich SERP results -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      { "@type": "Question", "name": "What video formats are supported?", "acceptedAnswer": { "@type": "Answer", "text": "MP4, MOV (including ProRes), MKV, AVI, MXF, WebM, M4V, MTS, and M2TS. Camera RAW formats like R3D and BRAW are not supported — transcode to ProRes or H.264 first." } },
-      { "@type": "Question", "name": "What resolution do I get?", "acceptedAnswer": { "@type": "Answer", "text": "Standard ($1.99): Full source resolution — drop in 4K, get 4K back. Free: 720p so you can preview the quality before upgrading." } },
-      { "@type": "Question", "name": "What's the difference between Free and Standard?", "acceptedAnswer": { "@type": "Answer", "text": "Free gives you 3 jobs per day at 720p with 2 min / 500MB limits. Standard ($1.99 per video) gives you full resolution up to 4K, 5 min / 2GB limits, and all output formats." } },
-      { "@type": "Question", "name": "How many frames will I get?", "acceptedAnswer": { "@type": "Answer", "text": "Roughly six stills per second of footage. A 60-second clip returns about 300 frames. A 30-second clip returns about 150." } },
-      { "@type": "Question", "name": "How long does processing take?", "acceptedAnswer": { "@type": "Answer", "text": "Most jobs finish in under a minute. Larger files (1GB+) or longer durations may take 2–3 minutes." } },
-      { "@type": "Question", "name": "Is my footage stored or shared?", "acceptedAnswer": { "@type": "Answer", "text": "No. Your video is processed in memory and deleted from our servers the moment your download finishes. We never view, store, or analyze your content." } },
-      { "@type": "Question", "name": "What's the file size and length limit?", "acceptedAnswer": { "@type": "Answer", "text": "Standard: up to 2GB per file and 5 minutes of footage. Free: up to 500MB and 2 minutes." } },
-      { "@type": "Question", "name": "Do I need an account?", "acceptedAnswer": { "@type": "Answer", "text": "No accounts, no signups, no logins for either tier. Free is rate-limited per IP. Standard is per-video at checkout." } },
-      { "@type": "Question", "name": "Can I use the stills commercially?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. You own your footage, you own the extracted stills. Use them anywhere — portfolio, social, client deliverables, festival submissions, prints." } }
-    ]
-  }
-  </script>
+/* ══════ USE CASES ══════ */
+.uses{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; margin-top:54px; background:var(--line)}
+.use{
+  background:var(--bg-2); padding:38px 32px; position:relative;
+  transition:background .3s;
+}
+.use:hover{background:var(--panel)}
+.use-k{
+  font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--acc);
+  letter-spacing:0.1em;
+}
+.use-t{font-weight:700; font-size:26px; text-transform:uppercase; margin:14px 0 8px}
+.use-d{color:var(--muted); font-size:16px; font-weight:400; line-height:1.55}
+@media(max-width:620px){.uses{grid-template-columns:1fr}}
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <link rel="stylesheet" href="style.css" />
+/* ══════ WHY ══════ */
+.why-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:36px; margin-top:54px}
+.why-i{
+  font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--acc);
+  margin-bottom:16px;
+}
+.why-h{font-weight:700; font-size:21px; text-transform:uppercase; margin-bottom:10px}
+.why-p{color:var(--muted); font-size:16px; font-weight:400; line-height:1.6}
+@media(max-width:760px){.why-grid{grid-template-columns:1fr; gap:30px}}
 
-  <!-- Cloudflare Web Analytics -->
-  <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "ece38a9ee3794edbb4bda6ce00ffb338"}'></script>
-  <!-- End Cloudflare Web Analytics -->
+/* ══════ SYSTEM STRIP ══════ */
+.system{
+  border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, var(--bg-2), var(--bg));
+}
+.system-inner{max-width:1200px; margin:0 auto; padding:80px 36px;
+  display:grid; grid-template-columns:1.1fr 0.9fr; gap:60px; align-items:center}
+.sys-photo{
+  aspect-ratio:4/3; border:1px solid var(--line); background:
+    repeating-linear-gradient(135deg, rgba(31,210,255,0.03) 0 2px, transparent 2px 9px),
+    var(--panel);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--dim);
+  text-transform:uppercase; letter-spacing:0.16em; text-align:center; padding:20px;
+}
+.sys-list{list-style:none}
+.sys-list li{
+  display:flex; justify-content:space-between; gap:16px;
+  padding:16px 0; border-bottom:1px solid var(--line);
+  font-family:'JetBrains Mono',monospace; font-size:13px;
+}
+.sys-list li span:first-child{color:var(--muted); text-transform:uppercase; letter-spacing:0.08em}
+.sys-list li span:last-child{color:var(--ink); font-weight:500; text-align:right}
+@media(max-width:760px){.system-inner{grid-template-columns:1fr; gap:36px; padding:64px 20px}}
+
+/* ══════ CONTACT ══════ */
+.contact{text-align:center; padding:120px 24px}
+.contact .h2{font-size:clamp(44px,8vw,96px)}
+.contact-p{
+  margin:28px auto 0; max-width:480px; font-size:19px;
+  color:var(--muted); font-weight:400; line-height:1.6;
+}
+.contact-cta{
+  display:inline-block; margin-top:40px;
+  font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.1em;
+  background:var(--acc); color:#03121a; padding:18px 38px;
+  transition:all .25s;
+}
+.contact-cta:hover{box-shadow:0 0 40px var(--acc-glow); transform:translateY(-2px)}
+.contact-note{
+  margin-top:40px; font-family:'JetBrains Mono',monospace; font-size:11px;
+  color:var(--dim); text-transform:uppercase; letter-spacing:0.16em; line-height:2;
+}
+
+/* ══════ FOOTER ══════ */
+footer{
+  position:relative; padding:26px 36px;
+  display:flex; flex-wrap:wrap; gap:10px;
+  justify-content:space-between; align-items:center;
+}
+.f-stripe{
+  position:absolute; top:0; left:0; right:0; height:3px;
+  background:repeating-linear-gradient(90deg, var(--acc) 0 12px, transparent 12px 18px);
+  opacity:.55;
+}
+footer span{
+  font-family:'JetBrains Mono',monospace; font-size:9px;
+  text-transform:uppercase; letter-spacing:0.18em; color:var(--muted);
+}
+footer span.dim{color:var(--dim)}
+@media(max-width:760px){footer{padding:24px 20px}}
+
+/* ══════ REVEAL ══════ */
+.reveal{opacity:0; transform:translateY(20px); transition:opacity .7s ease, transform .7s ease}
+.reveal.on{opacity:1; transform:none}
+@keyframes up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.fade-1{opacity:0;animation:up .7s ease .05s forwards}
+.fade-2{opacity:0;animation:up .7s ease .2s forwards}
+.fade-3{opacity:0;animation:up .7s ease .36s forwards}
+.fade-4{opacity:0;animation:up .7s ease .52s forwards}
+</style>
 </head>
 <body>
 
-  <div class="page">
+<header class="nav">
+  <a href="#" class="nav-logo">Undertow <em>Sound</em></a>
+  <ul class="nav-links">
+    <li><a href="#system">System</a></li>
+    <li><a href="#uses">Use Cases</a></li>
+    <li><a href="#why">Why Undertow</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Book the Rig →</a>
+</header>
 
-    <!-- Mobile save-for-later banner (shown on mobile only) -->
-    <div id="mobileSaveBanner" class="mobile-banner hidden">
-      <span class="mobile-banner-text">📱 On your phone? Save this for when you're at your laptop.</span>
-      <button id="mobileSaveBtn" class="mobile-banner-btn">Save it</button>
-      <button id="mobileSaveClose" class="mobile-banner-close" aria-label="Dismiss">×</button>
-    </div>
+<main>
 
-    <!-- Save-for-later options modal -->
-    <div id="saveModal" class="save-modal hidden" role="dialog" aria-label="Save for later options">
-      <div class="save-modal-backdrop" id="saveModalBackdrop"></div>
-      <div class="save-modal-panel">
-        <button id="saveModalClose" class="save-modal-x" aria-label="Close">×</button>
-        <div class="save-modal-title">Send framegrab.net to yourself</div>
-        <div class="save-modal-sub">Pick whichever's easiest:</div>
-        <div class="save-modal-options">
-          <button id="optShare" class="save-opt hidden">
-            <span class="save-opt-icon">📤</span>
-            <span class="save-opt-label">Share <span class="save-opt-sub">(AirDrop, Messages, more)</span></span>
-          </button>
-          <button id="optEmail" class="save-opt">
-            <span class="save-opt-icon">✉️</span>
-            <span class="save-opt-label">Email it to me <span class="save-opt-sub">(opens your mail app)</span></span>
-          </button>
-          <button id="optSMS" class="save-opt">
-            <span class="save-opt-icon">💬</span>
-            <span class="save-opt-label">Text it to me <span class="save-opt-sub">(opens Messages)</span></span>
-          </button>
-          <button id="optCopy" class="save-opt">
-            <span class="save-opt-icon">📋</span>
-            <span class="save-opt-label">Copy the link <span class="save-opt-sub">(paste anywhere)</span></span>
-          </button>
-        </div>
-      </div>
-    </div>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-wm" aria-hidden="true">UNDERTOW</div>
 
-    <nav class="nav">
-      <div class="nav-logo">
-        <svg width="22" height="18" viewBox="0 0 22 18" fill="none" stroke="#e8ff47" stroke-width="2" stroke-linecap="round" style="margin-right:8px;vertical-align:middle;">
-          <!-- top-left -->
-          <path d="M1 6V1h5"/>
-          <!-- top-right -->
-          <path d="M21 6V1h-5"/>
-          <!-- bottom-left -->
-          <path d="M1 12v5h5"/>
-          <!-- bottom-right -->
-          <path d="M21 12v5h-5"/>
-        </svg>FRAMEGRAB</div>
-    </nav>
-
-    <main id="main">
-
-      <!-- ─── Landing ──────────────────────────────────────────── -->
-      <section id="view-landing" class="view active">
-
-        <!-- Hero -->
-        <div class="hero">
-          <div class="hero-eyebrow">For filmmakers, editors &amp; content creators</div>
-          <h1 class="hero-headline">Portfolio-ready stills<br/>from any video, instantly.</h1>
-          <p class="hero-body">Drop any video file and get a full set of portfolio-ready stills delivered as a ZIP — full res, no editing software, no scrubbing. $1.99 flat.</p>
-        </div>
-
-        <!-- Use cases — right under the headline -->
-        <div class="usecases">
-          <div class="usecase">
-            <div class="usecase-role">Cinematographers</div>
-            <div class="usecase-desc">Hero frames for your portfolio without opening Premiere.</div>
-          </div>
-          <div class="usecase">
-            <div class="usecase-role">DIT<span style="text-transform:none">s</span></div>
-            <div class="usecase-desc">End-of-day deliverables for the director, DP, or colorist — under 60 seconds.</div>
-          </div>
-          <div class="usecase">
-            <div class="usecase-role">Directors &amp; Producers</div>
-            <div class="usecase-desc">Pitch decks, client presentations, and marketing assets — straight from your footage.</div>
-          </div>
-          <div class="usecase">
-            <div class="usecase-role">Social Media Managers</div>
-            <div class="usecase-desc">A full image set from one video — ready for Instagram, LinkedIn, or your site.</div>
-          </div>
-        </div>
-
-        <!-- Social proof strip -->
-        <div class="proof-strip">
-          <div class="proof-item">
-            <span class="proof-num">4K</span>
-            <span class="proof-label">Up to 4K output</span>
-          </div>
-          <div class="proof-divider"></div>
-          <div class="proof-item">
-            <span class="proof-num">&lt;60s</span>
-            <span class="proof-label">Typical turnaround</span>
-          </div>
-          <div class="proof-divider"></div>
-          <div class="proof-item">
-            <span class="proof-num">$1.99</span>
-            <span class="proof-label">Flat rate, no account</span>
-          </div>
-        </div>
-
-        <!-- Tiered pricing card -->
-        <div class="tier-grid">
-          <!-- Free tier -->
-          <div class="tier tier-free">
-            <div class="tier-badge">Try it first</div>
-            <div class="tier-name">Free</div>
-            <div class="tier-price">$0</div>
-            <ul class="tier-features">
-              <li>720p stills</li>
-              <li>Up to 2 min · 500MB</li>
-              <li>3 jobs per day</li>
-              <li>JPG output</li>
-            </ul>
-            <button id="freeBtn" class="btn-tier btn-tier-free">
-              Try Free
-            </button>
-          </div>
-
-          <!-- Paid Standard tier -->
-          <div class="tier tier-standard">
-            <div class="tier-badge tier-badge-accent">Recommended</div>
-            <div class="tier-name">Standard</div>
-            <div class="tier-price"><span id="payBtnPrice">$1.99</span></div>
-            <ul class="tier-features">
-              <li><strong>Full resolution</strong> — up to 4K</li>
-              <li>Up to 5 min · 2GB</li>
-              <li>Pay per video · no subscription</li>
-              <li>JPG, PNG, or WebP</li>
-            </ul>
-            <button id="payBtn" class="btn-tier btn-tier-paid">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-              Pay <span id="payBtnPrice2">$1.99</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Optional pre-pay compatibility check (shared) -->
-        <div class="precheck">
-          <details class="precheck-toggle">
-            <summary>Want to verify your file is compatible first? <span class="precheck-caret">▾</span></summary>
-            <div class="precheck-body">
-              <label for="precheckInput" class="precheck-pick">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                Choose file to check
-              </label>
-              <input type="file" id="precheckInput" accept="video/*,.mp4,.mov,.mkv,.avi,.mxf,.webm,.m4v,.mts,.m2ts,.r3d,.braw,.ari,.arri,.crm,.cdng,.dng" />
-              <div id="precheckResult" class="precheck-result"></div>
-            </div>
-          </details>
-        </div>
-
-        <p class="secure-note">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-          Secured by Stripe · Files deleted immediately after download
-        </p>
-
-
-        <!-- Why section -->
-        <div class="why-section">
-          <h2 class="why-title">Built for the way you actually work</h2>
-          <div class="why-grid">
-            <div class="why-card">
-              <div class="why-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-                </svg>
-              </div>
-              <h3>Industry-standard formats</h3>
-              <p>MP4, MOV/ProRes, MKV, AVI, WebM, most MXF. Not compatible with R3D, BRAW, or camera RAW — transcode first.</p>
-            </div>
-            <div class="why-card">
-              <div class="why-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
-                </svg>
-              </div>
-              <h3>Original resolution</h3>
-              <p>No resampling, no compression artifacts from the export process. Your stills come out at exactly the pixel dimensions your camera captured.</p>
-            </div>
-            <div class="why-card">
-              <div class="why-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                </svg>
-              </div>
-              <h3>Done before you make coffee</h3>
-              <p>A 60-second spot typically returns 300+ stills in under a minute. No queues, no waiting, no emails.</p>
-            </div>
-            <div class="why-card">
-              <div class="why-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-              </div>
-              <h3>Private by design</h3>
-              <p>Your footage never gets stored. Files are processed and deleted the moment your download completes. We see nothing.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- FAQ -->
-        <div class="faq-section">
-          <h2 class="why-title">Frequently asked questions</h2>
-          <div class="faq-list">
-            <details class="faq-item">
-              <summary>What video formats are supported?</summary>
-              <div class="faq-answer">MP4, MOV (including ProRes), MKV, AVI, MXF, WebM, M4V, MTS, and M2TS. Camera RAW formats like R3D and BRAW are not supported — transcode to ProRes or H.264 first.</div>
-            </details>
-            <details class="faq-item">
-              <summary>What resolution do I get?</summary>
-              <div class="faq-answer"><strong>Standard ($1.99):</strong> Full source resolution — drop in 4K, get 4K back. <strong>Free:</strong> Stills are scaled down to 720p so you can preview the quality before upgrading.</div>
-            </details>
-            <details class="faq-item">
-              <summary>What's the difference between Free and Standard?</summary>
-              <div class="faq-answer"><strong>Free</strong> gives you up to 3 jobs per day, 720p output, 2 min / 500MB max — perfect for trying the service. <strong>Standard</strong> ($1.99 per video) gives you full resolution up to 4K, 5 min / 2GB limits, and all output formats. Same processing, same speed — just full quality and bigger limits.</div>
-            </details>
-            <details class="faq-item">
-              <summary>How many frames will I get?</summary>
-              <div class="faq-answer">Roughly six stills per second of footage. A 60-second clip returns about 300 frames. A 30-second clip returns about 150.</div>
-            </details>
-            <details class="faq-item">
-              <summary>How long does processing take?</summary>
-              <div class="faq-answer">Most jobs finish in under a minute. Larger files (1GB+) or longer durations may take 2–3 minutes. You'll see a progress indicator — leave the tab open until it completes.</div>
-            </details>
-            <details class="faq-item">
-              <summary>Is my footage stored or shared?</summary>
-              <div class="faq-answer">No. Your video is processed in memory and deleted from our servers the moment your download finishes. We never view, store, or analyze your content. Read our <a href="/privacy">privacy policy</a> for details.</div>
-            </details>
-            <details class="faq-item">
-              <summary>What's the file size and length limit?</summary>
-              <div class="faq-answer"><strong>Standard:</strong> up to 2GB per file and 5 minutes of footage. <strong>Free:</strong> up to 500MB and 2 minutes. If your clip exceeds the limit, trim it first.</div>
-            </details>
-            <details class="faq-item">
-              <summary>Do I need an account?</summary>
-              <div class="faq-answer">No accounts, no signups, no logins — for either tier. Free is rate-limited per IP address; Standard is per-video at checkout.</div>
-            </details>
-            <details class="faq-item">
-              <summary>What if processing fails or my download breaks?</summary>
-              <div class="faq-answer">If anything goes wrong on our end, your session is automatically restored so you can upload again at no charge. If something else goes wrong, email <a href="mailto:framegrabsupport@gmail.com?subject=FrameGrab%20Support">framegrabsupport@gmail.com</a> — we'll make it right.</div>
-            </details>
-            <details class="faq-item">
-              <summary>Can I use the stills commercially?</summary>
-              <div class="faq-answer">Yes. You own your footage, you own the extracted stills. Use them anywhere — portfolio, social, client deliverables, festival submissions, prints.</div>
-            </details>
-            <details class="faq-item">
-              <summary>What output format should I choose?</summary>
-              <div class="faq-answer"><strong>JPG</strong> for portfolios and social (best balance of quality and size). <strong>PNG</strong> if you need lossless or transparency support. <strong>WebP</strong> for web use where every kilobyte matters.</div>
-            </details>
-          </div>
-        </div>
-
-      </section>
-
-      <!-- ─── Upload (post-payment) ─────────────────────────────── -->
-      <section id="view-upload" class="view">
-
-        <div class="paid-badge" id="paidBadge">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-          <span id="paidBadgeText">Payment confirmed — drop your video below</span>
-        </div>
-
-        <div class="card">
-          <div class="drop-zone" id="dropZone">
-            <div class="drop-icon">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
-              </svg>
-            </div>
-            <p class="drop-primary">Drop your video here</p>
-            <p class="drop-secondary">or <label for="fileInput" class="browse-link">browse</label></p>
-            <p class="drop-formats">MP4 · MOV · ProRes · MKV · AVI · MXF · WebM</p>
-            <p class="drop-formats" style="margin-top:6px;color:#444">Not supported: R3D, BRAW, or other camera RAW formats</p>
-            <input type="file" id="fileInput" accept=".mp4,.mov,.mxf,.avi,.mkv,.m4v,.mts,.m2ts,.webm" />
-          </div>
-
-          <div id="fileInfo" class="file-info hidden">
-            <div class="file-meta">
-              <span class="file-name" id="fileName">—</span>
-              <span class="file-size" id="fileSize">—</span>
-            </div>
-          </div>
-
-          <div id="optionsPanel" class="options hidden">
-            <div class="option-row">
-              <div class="option-group">
-                <label>Format</label>
-                <div class="fmt-btns" id="fmtBtns">
-                  <button class="fmt-btn active" data-fmt="jpg">JPG</button>
-                  <button class="fmt-btn" data-fmt="png">PNG</button>
-                  <button class="fmt-btn" data-fmt="webp">WebP</button>
-                </div>
-              </div>
-              <div class="option-group" id="qualityGroup">
-                <label>Quality — <span id="qualityVal">95</span></label>
-                <input type="range" id="qualitySlider" min="60" max="100" value="95" step="1" />
-              </div>
-            </div>
-            <button id="extractBtn" class="btn-extract">
-              <span id="extractLabel">Extract Frames</span>
-              <span class="spinner hidden" id="extractSpinner"></span>
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- ─── Processing ────────────────────────────────────────── -->
-      <section id="view-processing" class="view">
-        <div class="card center">
-          <div class="proc-ring">
-            <svg class="spin" width="48" height="48" viewBox="0 0 48 48" fill="none">
-              <circle cx="24" cy="24" r="20" stroke="#222" stroke-width="3"/>
-              <path d="M24 4 A20 20 0 0 1 44 24" stroke="#e8ff47" stroke-width="3" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <p class="proc-label" id="procLabel">Uploading…</p>
-          <div class="prog-wrap"><div class="prog-bar" id="progBar"></div></div>
-          <p class="proc-sub">Do not close this window while processing</p>
-        </div>
-      </section>
-
-      <!-- ─── Done ──────────────────────────────────────────────── -->
-      <section id="view-done" class="view">
-        <div class="card center">
-          <div class="done-ring">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-          </div>
-          <h2 class="done-title">Your stills are ready</h2>
-          <p class="done-sub" id="doneSub">Preparing download…</p>
-          <a id="downloadLink" class="btn-pay" href="#" download style="text-decoration:none;max-width:260px;margin:0 auto">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Download ZIP
-          </a>
-          <button id="anotherBtn" class="btn-ghost hidden" style="margin-top:12px">Extract another video</button>
-        </div>
-      </section>
-
-    </main>
-
-    <footer>
-      <div class="footer-inner">
-        <span class="footer-logo">FRAMEGRAB</span>
-        <span>·</span>
-        <a href="/terms">Terms</a>
-        <span>·</span>
-        <a href="/privacy">Privacy</a>
-        <span>·</span>
-        <a href="mailto:framegrabsupport@gmail.com?subject=FrameGrab%20Support">Support</a>
-      </div>
-    </footer>
-
+  <div class="hero-meta fade-1">
+    <span class="pill live">Available Now</span>
+    <span class="pill">BassBoss Equipped</span>
+    <span class="pill">Trailer-Mobile</span>
+    <span class="pill">NC / Southeast</span>
   </div>
 
-  <div class="toast" id="toast"></div>
-  <script src="app.js"></script>
+  <h1 class="hero-h1 fade-2">
+    Built for<br/>
+    <span class="block">Picky</span><br/>
+    <span class="acc">Crowds.</span>
+  </h1>
+
+  <p class="hero-p fade-3">
+    The rooms that matter most are usually the smallest ones.
+    <strong>Undertow Sound</strong> is a mobile PA built specifically for
+    100–200 person events where the music is the point and the sound has to be right.
+  </p>
+
+  <div class="hero-actions fade-4">
+    <a href="#contact" class="btn btn-pri">Book the Rig →</a>
+    <a href="#system" class="btn btn-sec">See the System</a>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats">
+  <div class="stat"><div class="stat-n">13<em>kW</em></div><div class="stat-l">System Power</div></div>
+  <div class="stat"><div class="stat-n">28<em>Hz</em></div><div class="stat-l">Frequency Floor</div></div>
+  <div class="stat"><div class="stat-n">139<em>dB</em></div><div class="stat-l">Peak SPL</div></div>
+  <div class="stat"><div class="stat-n">100<em>%</em></div><div class="stat-l">Self-Powered</div></div>
+</section>
+
+<!-- USE CASES -->
+<section class="section" id="uses">
+  <div class="eyebrow reveal">What it's for</div>
+  <h2 class="h2 reveal">The Right Rooms</h2>
+  <p class="lead reveal">
+    Tuned on site, not guessed. Built for events where the low end has to actually work —
+    if your night lives or dies on a sub drop, this is the rig.
+  </p>
+
+  <div class="uses">
+    <div class="use reveal">
+      <div class="use-k">01 / Club Nights</div>
+      <div class="use-t">150–300 Cap</div>
+      <div class="use-d">DnB, dubstep, techno, house. The small rooms where sound quality is the whole experience.</div>
+    </div>
+    <div class="use reveal">
+      <div class="use-k">02 / Outdoor</div>
+      <div class="use-t">300–500 Cap</div>
+      <div class="use-d">Day parties, lots, fields. Self-powered and trailer-mobile — no house system to fight.</div>
+    </div>
+    <div class="use reveal">
+      <div class="use-k">03 / Warehouse</div>
+      <div class="use-t">Raw Spaces</div>
+      <div class="use-d">Converted rooms and pop-ups. Brought in, dialed in, torn down — by the person who quoted it.</div>
+    </div>
+    <div class="use reveal">
+      <div class="use-k">04 / Private</div>
+      <div class="use-t">On Request</div>
+      <div class="use-d">Closed events that still want the real thing. Same rig, same standard, no compromise.</div>
+    </div>
+  </div>
+</section>
+
+<!-- SYSTEM -->
+<section class="system" id="system">
+  <div class="system-inner">
+    <div class="sys-photo reveal">[ Rig Photo — Empty Room / Available Light ]</div>
+    <div class="reveal">
+      <div class="eyebrow">The System</div>
+      <h2 class="h2" style="font-size:clamp(34px,5vw,56px)">Dialed In.</h2>
+      <p class="lead" style="margin-top:18px">
+        BassBoss self-powered, DSP-controlled, tuned to the room. System specs that speak for themselves.
+      </p>
+      <ul class="sys-list" style="margin-top:30px">
+        <li><span>Subs</span><span>BassBoss VS21 MK3</span></li>
+        <li><span>Tops</span><span>BassBoss AT312 MK3</span></li>
+        <li><span>Power</span><span>Self-powered · DSP</span></li>
+        <li><span>Frequency Floor</span><span>28 Hz</span></li>
+        <li><span>Peak SPL</span><span>139 dB</span></li>
+        <li><span>Service</span><span>Delivery · Setup · Tune · Operate · Teardown</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- WHY -->
+<section class="section" id="why">
+  <div class="eyebrow reveal">Why Undertow</div>
+  <h2 class="h2 reveal">No Hand-Offs.</h2>
+  <div class="why-grid">
+    <div class="reveal">
+      <div class="why-i">01</div>
+      <div class="why-h">Right-Sized</div>
+      <div class="why-p">Built for the rooms that matter, not the biggest stage. Small rooms are harder to get right — most operators don't bother. This one does.</div>
+    </div>
+    <div class="reveal">
+      <div class="why-i">02</div>
+      <div class="why-h">One Point of Contact</div>
+      <div class="why-p">The person who quotes the job runs the rig. No sales guy handing off to a tech who doesn't care. Start to finish, same hands.</div>
+    </div>
+    <div class="reveal">
+      <div class="why-i">03</div>
+      <div class="why-h">25 Years In</div>
+      <div class="why-p">Field sound, set, rigging, lighting, national broadcast. Knows the music, knows the room, knows what goes wrong before it does.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+  <div class="eyebrow reveal" style="justify-content:center">Booking</div>
+  <h2 class="h2 reveal">Book the Rig.</h2>
+  <p class="contact-p reveal">
+    Send your date, venue, and expected crowd size. We'll take it from there.
+  </p>
+  <a href="mailto:booking@undertowsound.com" class="contact-cta reveal">booking@undertowsound.com</a>
+  <div class="contact-note reveal">
+    Undertow Sound · Mobile PA Hire<br/>
+    NC / Southeast · BassBoss Equipped<br/>
+    Small rooms and first-time promoters welcome — that's the work.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="f-stripe" aria-hidden="true"></div>
+  <span>© Undertow Sound — Mobile PA for electronic music.</span>
+  <span class="dim">BassBoss VS21-MK3 · AT312-MK3 · NC</span>
+</footer>
+
+<script>
+const els = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target); }
+  });
+}, { threshold: 0.07, rootMargin: '0px 0px -32px 0px' });
+els.forEach(el => io.observe(el));
+</script>
 </body>
 </html>
