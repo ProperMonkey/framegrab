@@ -4,3 +4,6 @@ frames/
 sessions.db
 .env
 *.zip
+.next/
+node_modules/
+tsconfig.tsbuildinfo
