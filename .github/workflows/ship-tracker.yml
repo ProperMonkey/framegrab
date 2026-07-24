@@ -1,0 +1,64 @@
+name: ship-tracker
+
+# Periodic screenshot + visual-diff of the MarineTraffic view, so movement
+# shifts (mass diversion or stalling) get flagged automatically.
+#
+# State (previous screenshot + baseline history) is carried between runs via
+# actions/cache. Each run uploads the screenshot and diff heatmap as an
+# artifact and writes a verdict to the job summary.
+
+on:
+  schedule:
+    # Every 30 minutes. GitHub may delay scheduled runs under load; for tighter
+    # cadence run it locally with `npm run watch`.
+    - cron: '*/30 * * * *'
+  workflow_dispatch: {} # allow manual runs from the Actions tab
+
+# Don't pile up overlapping runs.
+concurrency:
+  group: ship-tracker
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ship-tracker
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Restore prior screenshots + baseline so diffing has something to
+      # compare against. Rolling key: restore the newest, save a fresh one.
+      - name: Restore state
+        uses: actions/cache@v4
+        with:
+          path: ship-tracker/data
+          key: ship-tracker-data-${{ github.run_id }}
+          restore-keys: |
+            ship-tracker-data-
+
+      - name: Install deps
+        run: npm ci || npm install
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Capture + compare
+        run: node monitor.js
+
+      - name: Upload screenshot + diff
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shot-${{ github.run_id }}
+          path: |
+            ship-tracker/data/shots
+            ship-tracker/data/diffs
+            ship-tracker/data/changes.csv
+          retention-days: 14
+          if-no-files-found: ignore
